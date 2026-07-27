@@ -27,7 +27,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "satori": "^0.26.0",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.3.3"
   },
   "overrides": {
     "sharp": "^0.35.3",
