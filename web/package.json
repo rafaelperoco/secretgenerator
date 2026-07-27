@@ -28,5 +28,12 @@
     "react-dom": "^19.2.5",
     "satori": "^0.26.0",
     "tailwindcss": "^4.2.4"
+  },
+  "overrides": {
+    "sharp": "^0.35.3",
+    "svgo": "^4.0.2",
+    "js-yaml": "^4.3.0",
+    "postcss": "^8.5.23",
+    "@babel/core": "^7.29.7"
   }
 }
