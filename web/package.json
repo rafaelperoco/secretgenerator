@@ -26,7 +26,7 @@
     "astro": "^7.3.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "satori": "^0.33.4",
+    "satori": "^0.33.5",
     "tailwindcss": "^4.3.3"
   },
   "overrides": {
