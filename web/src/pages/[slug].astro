@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import Generator from "../components/Generator.tsx";
 import { SUBCOMMANDS, type SubcommandPage } from "../data/subcommands";
+import { releaseVersion as version } from "../lib/release";
 
 export function getStaticPaths() {
   return SUBCOMMANDS.map((s) => ({ params: { slug: s.slug }, props: { entry: s } }));
@@ -13,7 +14,6 @@ interface Props {
 
 const { entry } = Astro.props;
 const ghRepo = "https://github.com/rafaelperoco/secretgenerator";
-const version = "v2.1.0";
 const otherEntries = SUBCOMMANDS.filter((s) => s.slug !== entry.slug);
 ---
 

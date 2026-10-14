@@ -118,9 +118,11 @@ SBOMs, container images, and SLSA L3 provenance.
 The release-please workflow needs a `RELEASE_PLEASE_TOKEN` repository
 secret: a fine-grained PAT or GitHub App token with Contents write that is
 allowed to trigger workflows. A tag created with the default `GITHUB_TOKEN`
-does not start `release.yml`. The manifest in
-`.release-please-manifest.json` is `2.0.0`, so the next release is computed
-from commits after that tag.
+does not start `release.yml`. `.release-please-manifest.json` is the
+released version. The site header, install snippets, and JSON-LD
+`softwareVersion` read that file. `web-deploy` runs when the manifest
+changes, so merging the release pull request publishes the site at the
+same version as the tag.
 
 The hand-written `## [Unreleased]` section in `CHANGELOG.md` is not
 regenerated from commits. Review the first release pull request and fold
