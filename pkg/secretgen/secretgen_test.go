@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 )
 
 func TestPassword_Defaults(t *testing.T) {
@@ -147,6 +149,13 @@ func TestSecret_NegativeBytes(t *testing.T) {
 	_, err := Secret(SecretOptions{Bytes: -1})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestSecret_RejectsHugeByteCount(t *testing.T) {
+	_, err := Secret(SecretOptions{Bytes: limits.MaxSecretBytes + 1, MinEntropyBits: -1})
+	if !errors.Is(err, limits.ErrLimit) {
+		t.Fatalf("Secret past limit: %v", err)
 	}
 }
 

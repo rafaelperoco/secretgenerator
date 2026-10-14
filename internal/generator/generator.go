@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 )
 
 // ErrClassExhausted is returned when rejection sampling cannot satisfy
@@ -25,9 +26,10 @@ var ErrEntropyFailure = errors.New("generator: entropy source failure")
 // requirement is hard to satisfy.
 //
 // 1000 is sized for the worst realistic case: a 4-character string from
-// alphanum-symbols-v1 (94 runes) that must contain all 4 classes has
-// per-attempt acceptance ≈ 6.6% (4! × 26·26·10·32 / 94^4), so 1000
-// attempts give a false-failure probability of (1-0.066)^1000 ≈ 10^-30.
+// alphanum-symbols-v1 (93 runes; the registry omits the double quote)
+// that must contain all 4 classes has per-attempt acceptance ≈ 6.7%
+// (4! × 26·26·10·31 / 93^4), so 1000 attempts give a false-failure
+// probability of (1-0.067)^1000 ≈ 10^-30.
 // For typical configurations (length 12+, all 4 classes) the acceptance
 // rate is >0.8 and the cap is essentially never hit.
 //
@@ -56,8 +58,8 @@ type Request struct {
 // generation; this function never returns a partially-generated string
 // on error.
 func Generate(req Request) (string, error) {
-	if req.Length <= 0 {
-		return "", fmt.Errorf("generator: length must be > 0, got %d", req.Length)
+	if err := limits.CheckPositive(req.Length, limits.MaxPasswordLength, "length"); err != nil {
+		return "", err
 	}
 	if req.Charset.Size() < 2 {
 		return "", fmt.Errorf("generator: charset must contain at least 2 runes, got %d", req.Charset.Size())

@@ -15,6 +15,7 @@ import (
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
 	"github.com/rafaelperoco/secretgenerator/internal/generator"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/rafaelperoco/secretgenerator/internal/words"
 )
@@ -91,7 +92,7 @@ type PasswordOptions struct {
 	CharsetID       string  // default "alphanum-v1"
 	Exclude         string  // optional runes to remove from the charset before generation
 	RequiredClasses string  // comma-separated: "lower,upper,digit,symbol"
-	MinEntropyBits  float64 // default 80; 0 disables
+	MinEntropyBits  float64 // 0 selects the default floor (80); negative disables it
 	AllowWeak       bool    // permit below-floor with a warning
 }
 
@@ -101,6 +102,9 @@ type PasswordOptions struct {
 func Password(o PasswordOptions) (Result, error) {
 	if o.Length == 0 {
 		o.Length = 20
+	}
+	if err := limits.CheckPositive(o.Length, limits.MaxPasswordLength, "length"); err != nil {
+		return Result{}, err
 	}
 	if o.CharsetID == "" {
 		o.CharsetID = "alphanum-v1"
@@ -180,7 +184,7 @@ type SecretOptions struct {
 	Bytes          int     // default 32
 	Encoding       string  // default "base64url"; one of base64url|base64|base32|hex
 	Prefix         string  // optional fixed prefix (does not contribute to entropy)
-	MinEntropyBits float64 // default 128; 0 disables
+	MinEntropyBits float64 // 0 selects the default floor (128); negative disables it
 	AllowWeak      bool
 }
 
@@ -200,8 +204,8 @@ func Secret(o SecretOptions) (Result, error) {
 	if !validEncoding(o.Encoding) {
 		return Result{}, fmt.Errorf("secretgen: unknown encoding %q", o.Encoding)
 	}
-	if o.Bytes < 0 {
-		return Result{}, fmt.Errorf("secretgen: bytes must be > 0, got %d", o.Bytes)
+	if err := limits.CheckPositive(o.Bytes, limits.MaxSecretBytes, "bytes"); err != nil {
+		return Result{}, err
 	}
 
 	bits := float64(o.Bytes) * 8
@@ -248,7 +252,7 @@ type APIKeyOptions struct {
 	Prefix         string  // default "sk"
 	Separator      string  // default "_"
 	Length         int     // default 32; length of the base62 body
-	MinEntropyBits float64 // default 128
+	MinEntropyBits float64 // 0 selects the default floor (128); negative disables it
 	AllowWeak      bool
 }
 
@@ -266,6 +270,9 @@ func APIKey(o APIKeyOptions) (Result, error) {
 	}
 	if o.MinEntropyBits == 0 {
 		o.MinEntropyBits = 128
+	}
+	if err := limits.CheckPositive(o.Length, limits.MaxPasswordLength, "length"); err != nil {
+		return Result{}, err
 	}
 	if strings.ContainsAny(o.Prefix, " \t\n\r") {
 		return Result{}, fmt.Errorf("secretgen: prefix must not contain whitespace")
@@ -315,7 +322,7 @@ type PassphraseOptions struct {
 	Separator      string  // default "-"
 	Capitalize     bool    // compatibility flag — emits a warning
 	DigitSuffix    bool    // compatibility flag — emits a warning
-	MinEntropyBits float64 // default 80
+	MinEntropyBits float64 // 0 selects the default floor (80); negative disables it
 	AllowWeak      bool
 }
 
@@ -323,6 +330,9 @@ type PassphraseOptions struct {
 func Passphrase(o PassphraseOptions) (Result, error) {
 	if o.Words == 0 {
 		o.Words = 8
+	}
+	if err := limits.CheckPositive(o.Words, limits.MaxPassphraseWords, "words"); err != nil {
+		return Result{}, err
 	}
 	if o.Separator == "" {
 		o.Separator = "-"

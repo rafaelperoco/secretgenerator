@@ -31,6 +31,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
 import { detectAsset, UnsupportedPlatformError } from "./platform.js";
+import { releaseTag, unsafeArchiveMember } from "./archive.js";
 import {
   cosignAvailable,
   verifyChecksum,
@@ -75,7 +76,7 @@ async function main() {
     throw err;
   }
 
-  const version = readVersion();
+  const version = releaseTag(readVersion());
   const archiveName = `secretgenerator_${stripV(version)}_${asset.suffix}`;
   const baseUrl = `https://github.com/${REPO}/releases/download/${version}`;
   const archiveUrl = `${baseUrl}/${archiveName}`;
@@ -102,6 +103,7 @@ async function main() {
     const checksumsText = readFileSync(checksumsPath, "utf8");
     verifyChecksum(archivePath, archiveName, checksumsText);
     console.log(`[secretgenerator] SHA-256 verified for ${archiveName}`);
+    assertSafeArchive(archivePath, asset.binary);
 
     if (existsSync(sigPath) && existsSync(pemPath) && cosignAvailable()) {
       if (verifyCosign(checksumsPath, pemPath, sigPath)) {
@@ -144,6 +146,8 @@ async function main() {
 
 function readVersion(): string {
   // Allow override (used by smoke tests pinning a specific tag).
+  // releaseTag() rejects anything that is not a semver tag, so the value
+  // cannot rewrite the download path or escape into a shell command.
   if (process.env.SECRETGENERATOR_VERSION) {
     return process.env.SECRETGENERATOR_VERSION;
   }
@@ -173,30 +177,35 @@ async function download(
   await pipeline(nodeStream, createWriteStream(out));
 }
 
-function extract(archive: string, dest: string, format: "tar.gz" | "zip") {
-  if (format === "tar.gz") {
-    const r = spawnSync("tar", ["-xzf", archive, "-C", dest], {
-      stdio: "inherit",
-    });
-    if (r.status !== 0) throw new Error(`tar exit ${r.status}`);
-    return;
-  }
-  // zip — use Node's built-in zlib + a small inflate; the simplest cross-
-  // platform approach on Windows is `tar -xf` which Windows 10+ ships
-  // with. Fall back to PowerShell Expand-Archive if tar is missing.
-  const r = spawnSync("tar", ["-xf", archive, "-C", dest], {
-    stdio: "inherit",
-  });
-  if (r.status !== 0) {
-    const ps = spawnSync(
-      "powershell",
-      ["-Command", `Expand-Archive -Path '${archive}' -DestinationPath '${dest}' -Force`],
-      { stdio: "inherit" }
+function assertSafeArchive(archive: string, binary: string): void {
+  const listed = spawnSync("tar", ["-tf", archive], { encoding: "utf8" });
+  if (listed.status !== 0) {
+    throw new IntegrityError(
+      `could not list archive members: ${(listed.stderr || "").trim()}`
     );
-    if (ps.status !== 0) {
-      throw new Error("zip extraction failed: tar and Expand-Archive both errored");
+  }
+  const names = listed.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const hasBinary = names.some((name) => {
+    const normalized = name.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/$/, "");
+    return normalized === binary;
+  });
+  if (!hasBinary) {
+    throw new IntegrityError(`archive does not contain ${binary}`);
+  }
+  for (const name of names) {
+    const why = unsafeArchiveMember(name, binary);
+    if (why) {
+      throw new IntegrityError(`refusing to extract archive: ${why}`);
     }
   }
+}
+
+function extract(archive: string, dest: string, format: "tar.gz" | "zip") {
+  // tar on Windows 10+ reads zip archives. Arguments stay in argv; the
+  // archive path is never interpolated into a shell command.
+  const args = format === "tar.gz" ? ["-xzf", archive, "-C", dest] : ["-xf", archive, "-C", dest];
+  const r = spawnSync("tar", args, { stdio: "inherit" });
+  if (r.status !== 0) throw new Error(`tar exit ${r.status}`);
 }
 
 // Reading the archive is delegated to `tar` / `Expand-Archive`; the

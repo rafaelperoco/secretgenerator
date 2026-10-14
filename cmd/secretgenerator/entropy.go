@@ -7,10 +7,8 @@ import (
 	"io"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
-	"github.com/rafaelperoco/secretgenerator/internal/charset"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/spf13/cobra"
 )
@@ -124,9 +122,10 @@ func runEntropy(o entropyOptions) error {
 		return e.fail(ExitInvalidArgs, fmt.Errorf("entropy: empty password"))
 	}
 
-	classes := observeClasses(o.Password)
-	charsetSize := classSize(classes)
-	bits := policy.EntropyBits(len(o.Password), charsetSize)
+	observed := policy.Observe(o.Password)
+	classes := observed.Classes
+	charsetSize := observed.AlphabetSize
+	bits := observed.Bits
 
 	var warnings []string
 	if o.FromArg {
@@ -141,8 +140,8 @@ func runEntropy(o entropyOptions) error {
 		}
 		out := audit.Output{
 			SchemaVersion:   audit.SchemaVersion,
-			Length:          len(o.Password),
-			CharsetID:       inferCharsetID(classes),
+			Length:          observed.RuneLength,
+			CharsetID:       observed.CharsetID,
 			CharsetSize:     charsetSize,
 			EntropyBits:     bits,
 			RequiredClasses: policy.ClassesString(classes),
@@ -168,60 +167,6 @@ func runEntropy(o entropyOptions) error {
 		printCrackTime(o.stdout, bits)
 	}
 	return nil
-}
-
-func observeClasses(s string) charset.Class {
-	var c charset.Class
-	for _, r := range s {
-		switch {
-		case unicode.IsLower(r) && r <= 0x7F:
-			c |= charset.ClassLower
-		case unicode.IsUpper(r) && r <= 0x7F:
-			c |= charset.ClassUpper
-		case r >= '0' && r <= '9':
-			c |= charset.ClassDigit
-		default:
-			c |= charset.ClassSymbol
-		}
-	}
-	return c
-}
-
-func classSize(c charset.Class) int {
-	size := 0
-	if c&charset.ClassLower != 0 {
-		size += 26
-	}
-	if c&charset.ClassUpper != 0 {
-		size += 26
-	}
-	if c&charset.ClassDigit != 0 {
-		size += 10
-	}
-	if c&charset.ClassSymbol != 0 {
-		size += 32
-	}
-	return size
-}
-
-func inferCharsetID(c charset.Class) string {
-	parts := []string{}
-	if c&charset.ClassLower != 0 {
-		parts = append(parts, "lower")
-	}
-	if c&charset.ClassUpper != 0 {
-		parts = append(parts, "upper")
-	}
-	if c&charset.ClassDigit != 0 {
-		parts = append(parts, "digit")
-	}
-	if c&charset.ClassSymbol != 0 {
-		parts = append(parts, "symbol")
-	}
-	if len(parts) == 0 {
-		return "empty"
-	}
-	return "observed:" + strings.Join(parts, "+")
 }
 
 func readStdinPassword(r io.Reader) (string, error) {

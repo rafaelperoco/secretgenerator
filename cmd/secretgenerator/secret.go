@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/spf13/cobra"
 )
@@ -80,8 +81,8 @@ func runSecret(o secretOptions) error {
 		applyStdinSecret(&o, req)
 	}
 
-	if o.Bytes <= 0 {
-		return e.fail(ExitInvalidArgs, fmt.Errorf("bytes must be > 0, got %d", o.Bytes))
+	if err := limits.CheckPositive(o.Bytes, limits.MaxSecretBytes, "bytes"); err != nil {
+		return e.fail(ExitInvalidArgs, err)
 	}
 	if !validEncoding(o.Encoding) {
 		return e.fail(ExitInvalidArgs, fmt.Errorf("unknown encoding %q (want base64url, base64, base32, hex)", o.Encoding))

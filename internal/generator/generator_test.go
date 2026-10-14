@@ -8,11 +8,20 @@ import (
 	"testing"
 
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 )
 
 type errReader struct{ err error }
 
 func (e errReader) Read(_ []byte) (int, error) { return 0, e.err }
+
+func TestGenerate_RejectsLengthPastLimit(t *testing.T) {
+	cs, _ := charset.Get("digit-v1")
+	_, err := Generate(Request{Charset: cs, Length: limits.MaxPasswordLength + 1})
+	if !errors.Is(err, limits.ErrLimit) {
+		t.Fatalf("Generate past limit: %v", err)
+	}
+}
 
 func TestGenerate_LengthExact(t *testing.T) {
 	cs, _ := charset.Get("alphanum-v1")
