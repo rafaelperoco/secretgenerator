@@ -71,8 +71,15 @@ sboms:
 signs:
   - cmd: cosign
     certificate: '${artifact}.pem'
+    # Cosign v3 signs a protobuf bundle by default and then ignores
+    # --output-certificate and --output-signature. The CLI installer and
+    # docs/AUDIT.md still verify checksums.txt.pem plus checksums.txt.sig,
+    # so keep the v2 outputs. --use-signing-config=false is required:
+    # with the signing config on, an empty --bundle path fails the sign.
     args:
       - sign-blob
+      - --use-signing-config=false
+      - --new-bundle-format=false
       - '--output-certificate=${certificate}'
       - '--output-signature=${signature}'
       - '${artifact}'
