@@ -2,8 +2,8 @@
 import Base from "../layouts/Base.astro";
 import Generator from "../components/Generator.tsx";
 import { SUBCOMMANDS } from "../data/subcommands";
+import { releaseVersion as version } from "../lib/release";
 
-const version = "v2.0.0";
 const ghRepo = "https://github.com/rafaelperoco/secretgenerator";
 const installCmd = `go install github.com/rafaelperoco/secretgenerator/cmd/secretgenerator@${version}`;
 ---

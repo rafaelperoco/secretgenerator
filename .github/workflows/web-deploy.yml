@@ -9,6 +9,7 @@ on:
       - "pkg/**"
       - "go.mod"
       - "go.sum"
+      - ".release-please-manifest.json"
       - ".github/workflows/web-deploy.yml"
   workflow_dispatch:
 

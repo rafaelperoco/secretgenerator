@@ -9,14 +9,16 @@
 //   - Perplexity / ChatGPT / Claude web-search citations
 //   - Generic web crawlers building structured indexes
 //
-// Source of truth: docs/* and the GitHub repo. Update the version field at
-// release time.
+import { releaseVersion } from "../lib/release";
+
+// softwareVersion defaults to the release-please manifest. Pass version
+// only to describe something other than the current release.
 
 interface Props {
   version?: string;
 }
 
-const { version = "v2.0.0" } = Astro.props;
+const { version = releaseVersion } = Astro.props;
 const repo = "https://github.com/rafaelperoco/secretgenerator";
 const site = "https://secretgenerator.org";
 const author = {
