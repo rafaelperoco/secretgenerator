@@ -203,12 +203,9 @@ jobs:
     name: npm publish (mcp)
     needs: [release]
     runs-on: ubuntu-latest
-    # The publish step itself reads NPM_TOKEN; if the secret is unset the
-    # publish-to-npm step short-circuits with a clear message rather than
-    # blocking the workflow. We do not gate the whole job on
-    # `secrets.NPM_TOKEN != ''` because GitHub Actions discourages using
-    # secrets in `if:` expressions (they would have to be evaluated by
-    # the runner before the job is admitted).
+    # Publish uses GitHub OIDC trusted publishing. id-token: write is
+    # required. Do not pass NPM_TOKEN: a stale token hides an OIDC failure
+    # and npm falls back to it.
     permissions:
       contents: read
       id-token: write
@@ -234,10 +231,13 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: mcp/package-lock.json
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install npm 11.5.1 or newer
+        run: npm install -g 'npm@>=11.5.1' && npm -v
 
       - name: Sync package version to release tag
         env:
@@ -255,17 +255,13 @@ jobs:
 
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "NPM_TOKEN secret is not configured; skipping npm publish."
-            echo "Set the NPM_TOKEN repository secret to enable automatic publish."
-            exit 0
-          fi
+          npm -v
           # Pre-release tags (containing "-") publish under `next`; only
-          # final releases get `latest`.
+          # final releases get `latest`. Trusted publishing authenticates
+          # this step with the GitHub OIDC token.
           if [[ "${REF_NAME}" == *-* ]]; then
             npm publish --access public --tag next
           else
@@ -292,10 +288,13 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: cli/package-lock.json
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install npm 11.5.1 or newer
+        run: npm install -g 'npm@>=11.5.1' && npm -v
 
       - name: Sync package version to release tag
         env:
@@ -310,7 +309,6 @@ jobs:
 
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           REF_NAME: ${{ github.ref_name }}
           # The cli package's postinstall would normally download from
           # the release we just published; we skip it during the publish
@@ -320,11 +318,7 @@ jobs:
           SECRETGENERATOR_SKIP_DOWNLOAD: "1"
         run: |
           set -euo pipefail
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "NPM_TOKEN secret is not configured; skipping npm publish."
-            echo "Set the NPM_TOKEN repository secret to enable automatic publish."
-            exit 0
-          fi
+          npm -v
           if [[ "${REF_NAME}" == *-* ]]; then
             npm publish --access public --tag next
           else
@@ -413,11 +407,17 @@ jobs:
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           if [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
             echo "CRATES_TOKEN secret is not configured; skipping crates publish."
             echo "Generate one at https://crates.io/settings/tokens with publish-update scope."
+            exit 0
+          fi
+          VERSION="${REF_NAME#v}"
+          if curl -fsSL -A "secretgenerator-release" "https://crates.io/api/v1/crates/secretgenerator/${VERSION}" >/dev/null; then
+            echo "secretgenerator ${VERSION} is already on crates.io"
             exit 0
           fi
           cargo publish --allow-dirty
