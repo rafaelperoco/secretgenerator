@@ -9,7 +9,7 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: github-actions
     directory: /
@@ -23,7 +23,7 @@ updates:
       codeql-action:
         patterns:
           - "github/codeql-action/*"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /web
@@ -32,7 +32,7 @@ updates:
     commit-message:
       # The site deploys from main. A web bump must not cut a CLI release.
       prefix: ci
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /mcp
@@ -42,7 +42,7 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /cli
@@ -52,4 +52,4 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
