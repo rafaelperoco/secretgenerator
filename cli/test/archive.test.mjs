@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { releaseTag, unsafeArchiveMember } from "../dist/archive.js";
+import { releaseTag, tarExtractArgs, unsafeArchiveMember } from "../dist/archive.js";
 
 test("releaseTag accepts semver tags and bare versions", () => {
   assert.equal(releaseTag("v2.0.0"), "v2.0.0");
@@ -35,6 +35,28 @@ test("unsafeArchiveMember allows the goreleaser layout", () => {
     assert.equal(unsafeArchiveMember(name, "secretgenerator"), null, name);
   }
   assert.equal(unsafeArchiveMember("secretgenerator.exe", "secretgenerator.exe"), null);
+});
+
+test("tarExtractArgs keeps same-drive paths local and pins drive letters", () => {
+  assert.deepEqual(tarExtractArgs("..\\secretgenerator_2.0.0_windows_amd64.zip", "zip"), [
+    "-xf",
+    "..\\secretgenerator_2.0.0_windows_amd64.zip",
+    "-C",
+    ".",
+  ]);
+  assert.deepEqual(tarExtractArgs("../secretgenerator_2.0.0_linux_amd64.tar.gz", "tar.gz"), [
+    "-xzf",
+    "../secretgenerator_2.0.0_linux_amd64.tar.gz",
+    "-C",
+    ".",
+  ]);
+  assert.deepEqual(tarExtractArgs("D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip", "zip"), [
+    "--force-local",
+    "-xf",
+    "D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip",
+    "-C",
+    ".",
+  ]);
 });
 
 test("unsafeArchiveMember rejects traversal and unexpected files", () => {

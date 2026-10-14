@@ -31,7 +31,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
 import { detectAsset, UnsupportedPlatformError } from "./platform.js";
-import { releaseTag, unsafeArchiveMember } from "./archive.js";
+import { releaseTag, tarExtractArgs, unsafeArchiveMember } from "./archive.js";
 import {
   cosignAvailable,
   verifyChecksum,
@@ -178,7 +178,12 @@ async function download(
 }
 
 function assertSafeArchive(archive: string, binary: string): void {
-  const listed = spawnSync("tar", ["-tf", archive], { encoding: "utf8" });
+  // Basename plus cwd: GNU tar on Windows reads `C:` in an absolute path
+  // as a remote host and fails with "Cannot connect to C".
+  const listed = spawnSync("tar", ["-tf", path.basename(archive)], {
+    cwd: path.dirname(archive),
+    encoding: "utf8",
+  });
   if (listed.status !== 0) {
     throw new IntegrityError(
       `could not list archive members: ${(listed.stderr || "").trim()}`
@@ -202,9 +207,11 @@ function assertSafeArchive(archive: string, binary: string): void {
 
 function extract(archive: string, dest: string, format: "tar.gz" | "zip") {
   // tar on Windows 10+ reads zip archives. Arguments stay in argv; the
-  // archive path is never interpolated into a shell command.
-  const args = format === "tar.gz" ? ["-xzf", archive, "-C", dest] : ["-xf", archive, "-C", dest];
-  const r = spawnSync("tar", args, { stdio: "inherit" });
+  // archive path is never interpolated into a shell command. cwd is the
+  // destination so a same-drive archive is a relative path. A cross-drive
+  // path still has a drive letter; tarExtractArgs adds --force-local.
+  const rel = path.relative(dest, archive);
+  const r = spawnSync("tar", tarExtractArgs(rel, format), { cwd: dest, stdio: "inherit" });
   if (r.status !== 0) throw new Error(`tar exit ${r.status}`);
 }
 

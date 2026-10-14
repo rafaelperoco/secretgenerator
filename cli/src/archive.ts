@@ -60,3 +60,15 @@ export function unsafeArchiveMember(name: string, binary: string): string | null
   }
   return `unexpected member ${JSON.stringify(name)}`;
 }
+
+/**
+ * tar argv for extraction. A Windows drive prefix makes GNU tar treat the
+ * path as a remote host (`Cannot connect to C`), so those paths get
+ * `--force-local`. Callers should pass a path relative to the dest cwd
+ * whenever the archive and the dest are on the same drive.
+ */
+export function tarExtractArgs(archiveArg: string, format: "tar.gz" | "zip"): string[] {
+  const flag = format === "tar.gz" ? "-xzf" : "-xf";
+  const args = [flag, archiveArg, "-C", "."];
+  return /^[A-Za-z]:/.test(archiveArg) ? ["--force-local", ...args] : args;
+}
