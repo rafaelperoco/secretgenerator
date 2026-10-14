@@ -29,7 +29,7 @@ schema version.
 | Field            | Type    | Description                                                                                                                                                      |
 | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `schema_version` | integer | Currently `1`. Const-pinned; bumps require a major version.                                                                                                      |
-| `length`         | integer | Length of the credential. For `passphrase`, this is the word count.                                                                                              |
+| `length`         | integer | Length of the credential. For `passphrase`, this is the word count. For `entropy`, this is the number of Unicode code points, not UTF-8 bytes.                    |
 | `charset_id`     | string  | Identifier of the source charset or wordlist. Versioned (`alphanum-v1`, `eff-large-v1`, etc.). When `--exclude` was applied, the suffix `+excluded` is appended. |
 | `charset_size`   | integer | Cardinality of the (possibly-excluded) charset.                                                                                                                  |
 | `entropy_bits`   | number  | Shannon entropy in bits, computed as `length * log2(charset_size)`.                                                                                              |

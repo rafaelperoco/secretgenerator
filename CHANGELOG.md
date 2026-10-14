@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `entropy` counts Unicode code points. A multi-byte character was
+  previously counted once per UTF-8 byte, so the reported upper bound
+  was higher than the character model allows.
+- Generation sizes are capped (password and API-key body 4096,
+  secret 1 MiB, passphrase 256 words, PIN 32 digits) so an unbounded
+  agent request cannot exhaust memory.
+- The WASM/MCP path treats an explicit `minEntropyBits: 0` as "disable
+  the floor", matching the CLI flag. Omitting the field still applies
+  the default floor.
+- `pin --audit-log` warns that SHA-256 of a short PIN is reversible by
+  exhaustive search.
+- The npm installer rejects a non-semver `SECRETGENERATOR_VERSION` and
+  refuses archive members that escape the install directory. Zip
+  extraction no longer interpolates paths into PowerShell. On Windows
+  the installer uses the system `tar`, which reads zip archives, and
+  passes a relative archive path so a drive letter is not a remote host.
+
 ### Added
 
 - `--help-json` persistent flag (root + every subcommand). Emits a

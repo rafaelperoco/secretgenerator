@@ -64,6 +64,37 @@ func TestRunPIN_DigitsTooFew(t *testing.T) {
 	}
 }
 
+func TestRunPIN_DigitsTooMany(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	o := basePINOptions(&stdout, &stderr)
+	o.Digits = 33
+	err := runPIN(o)
+	var ce *codedError
+	if !errors.As(err, &ce) || ce.code != ExitInvalidArgs {
+		t.Errorf("got %v, want ExitInvalidArgs", err)
+	}
+}
+
+func TestRunPIN_AuditLogWarnsHashIsReversible(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	o := basePINOptions(&stdout, &stderr)
+	o.JSON = true
+	o.AuditLogPath = t.TempDir() + "/audit.jsonl"
+	if err := runPIN(o); err != nil {
+		t.Fatalf("runPIN: %v", err)
+	}
+	out := decodeJSON(t, stdout.Bytes())
+	found := false
+	for _, w := range out.Warnings {
+		if strings.Contains(w, "SHA-256") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("warnings = %v, want a SHA-256 reversibility warning", out.Warnings)
+	}
+}
+
 func TestRunPIN_RejectsWeakPatterns(t *testing.T) {
 	// Run many iterations and verify no output is in the blocklist or
 	// matches a known weak pattern.

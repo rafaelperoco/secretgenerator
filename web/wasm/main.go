@@ -22,13 +22,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"syscall/js"
 	"time"
 
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
 	"github.com/rafaelperoco/secretgenerator/internal/generator"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/rafaelperoco/secretgenerator/internal/words"
 	"github.com/rafaelperoco/secretgenerator/pkg/secretgen"
@@ -38,17 +38,17 @@ const browserVersion = "secretgenerator-web@2.0.0"
 
 func main() {
 	js.Global().Set("secretgen", js.ValueOf(map[string]any{
-		"password":          js.FuncOf(wrapPassword),
-		"secret":            js.FuncOf(wrapSecret),
-		"passphrase":        js.FuncOf(wrapPassphrase),
-		"apiKey":            js.FuncOf(wrapAPIKey),
-		"pin":               js.FuncOf(wrapPIN),
-		"entropy":           js.FuncOf(wrapEntropy),
-		"charsets":          js.FuncOf(wrapCharsets),
-		"attackerProfiles":  js.FuncOf(wrapAttackerProfiles),
-		"crackTimes":        js.FuncOf(wrapCrackTimes),
-		"schemaVersion":     js.ValueOf(audit.SchemaVersion),
-		"version":           js.ValueOf(browserVersion),
+		"password":         js.FuncOf(wrapPassword),
+		"secret":           js.FuncOf(wrapSecret),
+		"passphrase":       js.FuncOf(wrapPassphrase),
+		"apiKey":           js.FuncOf(wrapAPIKey),
+		"pin":              js.FuncOf(wrapPIN),
+		"entropy":          js.FuncOf(wrapEntropy),
+		"charsets":         js.FuncOf(wrapCharsets),
+		"attackerProfiles": js.FuncOf(wrapAttackerProfiles),
+		"crackTimes":       js.FuncOf(wrapCrackTimes),
+		"schemaVersion":    js.ValueOf(audit.SchemaVersion),
+		"version":          js.ValueOf(browserVersion),
 	}))
 
 	// Block forever; syscall/js callbacks are dispatched on the JS event
@@ -143,7 +143,7 @@ func wrapPassword(_ js.Value, args []js.Value) any {
 		CharsetID:       optString(o, "charsetId", ""),
 		Exclude:         optString(o, "exclude", ""),
 		RequiredClasses: optString(o, "requiredClasses", ""),
-		MinEntropyBits:  optFloat(o, "minEntropyBits", 0),
+		MinEntropyBits:  optMinEntropy(o, "minEntropyBits"),
 		AllowWeak:       optBool(o, "allowWeak", false),
 	})
 	if err != nil {
@@ -161,7 +161,7 @@ func wrapSecret(_ js.Value, args []js.Value) any {
 		Bytes:          optInt(o, "bytes", 0),
 		Encoding:       optString(o, "encoding", ""),
 		Prefix:         optString(o, "prefix", ""),
-		MinEntropyBits: optFloat(o, "minEntropyBits", 0),
+		MinEntropyBits: optMinEntropy(o, "minEntropyBits"),
 		AllowWeak:      optBool(o, "allowWeak", false),
 	})
 	if err != nil {
@@ -180,7 +180,7 @@ func wrapPassphrase(_ js.Value, args []js.Value) any {
 		Separator:      optString(o, "separator", ""),
 		Capitalize:     optBool(o, "capitalize", false),
 		DigitSuffix:    optBool(o, "digitSuffix", false),
-		MinEntropyBits: optFloat(o, "minEntropyBits", 0),
+		MinEntropyBits: optMinEntropy(o, "minEntropyBits"),
 		AllowWeak:      optBool(o, "allowWeak", false),
 	})
 	if err != nil {
@@ -198,7 +198,7 @@ func wrapAPIKey(_ js.Value, args []js.Value) any {
 		Prefix:         optString(o, "prefix", ""),
 		Separator:      optString(o, "separator", ""),
 		Length:         optInt(o, "length", 0),
-		MinEntropyBits: optFloat(o, "minEntropyBits", 0),
+		MinEntropyBits: optMinEntropy(o, "minEntropyBits"),
 		AllowWeak:      optBool(o, "allowWeak", false),
 	})
 	if err != nil {
@@ -216,8 +216,8 @@ func wrapPIN(_ js.Value, args []js.Value) any {
 	}
 	o := args[0]
 	digits := optInt(o, "digits", 6)
-	if digits < 4 {
-		return errToJS(fmt.Errorf("pin: digits must be >= 4, got %d", digits))
+	if digits < 4 || digits > limits.MaxPINDigits {
+		return errToJS(fmt.Errorf("pin: digits must be in 4..%d, got %d", limits.MaxPINDigits, digits))
 	}
 	if !optBool(o, "acknowledgeLowEntropy", false) {
 		return errToJS(fmt.Errorf("pin: requires acknowledgeLowEntropy=true (PINs are intrinsically low-entropy)"))
@@ -280,9 +280,7 @@ func wrapEntropy(_ js.Value, args []js.Value) any {
 		return errToJS(errors.New("entropy: password is empty"))
 	}
 
-	classes := observeClasses(pw)
-	size := classSize(classes)
-	bits := policy.EntropyBits(len(pw), size)
+	observed := policy.Observe(pw)
 
 	requestID, err := audit.NewUUIDv4(nil)
 	if err != nil {
@@ -290,11 +288,11 @@ func wrapEntropy(_ js.Value, args []js.Value) any {
 	}
 	res := secretgen.Result{
 		SchemaVersion:   audit.SchemaVersion,
-		Length:          len(pw),
-		CharsetID:       inferCharsetID(classes),
-		CharsetSize:     size,
-		EntropyBits:     bits,
-		RequiredClasses: policy.ClassesString(classes),
+		Length:          observed.RuneLength,
+		CharsetID:       observed.CharsetID,
+		CharsetSize:     observed.AlphabetSize,
+		EntropyBits:     observed.Bits,
+		RequiredClasses: policy.ClassesString(observed.Classes),
 		Algorithm:       "shannon-upper-bound",
 		Subcommand:      "entropy",
 		RequestID:       requestID,
@@ -303,58 +301,21 @@ func wrapEntropy(_ js.Value, args []js.Value) any {
 	return resultToJS(res)
 }
 
-func observeClasses(s string) charset.Class {
-	var c charset.Class
-	for _, r := range s {
-		switch {
-		case r >= 'a' && r <= 'z':
-			c |= charset.ClassLower
-		case r >= 'A' && r <= 'Z':
-			c |= charset.ClassUpper
-		case r >= '0' && r <= '9':
-			c |= charset.ClassDigit
-		default:
-			c |= charset.ClassSymbol
-		}
+// optMinEntropy maps the JS contract onto the Go API. An omitted field
+// returns 0, which secretgen rewrites to the subcommand's default floor.
+// An explicit 0 disables the floor. The Go field cannot use 0 for both,
+// because 0 is also the zero value that means "apply the default", so the
+// disable sentinel passed into Go is negative.
+func optMinEntropy(obj js.Value, key string) float64 {
+	v := obj.Get(key)
+	if v.IsUndefined() || v.IsNull() {
+		return 0
 	}
-	return c
-}
-
-func classSize(c charset.Class) int {
-	size := 0
-	if c&charset.ClassLower != 0 {
-		size += 26
+	f := v.Float()
+	if f == 0 {
+		return -1
 	}
-	if c&charset.ClassUpper != 0 {
-		size += 26
-	}
-	if c&charset.ClassDigit != 0 {
-		size += 10
-	}
-	if c&charset.ClassSymbol != 0 {
-		size += 32
-	}
-	return size
-}
-
-func inferCharsetID(c charset.Class) string {
-	parts := []string{}
-	if c&charset.ClassLower != 0 {
-		parts = append(parts, "lower")
-	}
-	if c&charset.ClassUpper != 0 {
-		parts = append(parts, "upper")
-	}
-	if c&charset.ClassDigit != 0 {
-		parts = append(parts, "digit")
-	}
-	if c&charset.ClassSymbol != 0 {
-		parts = append(parts, "symbol")
-	}
-	if len(parts) == 0 {
-		return "empty"
-	}
-	return "observed:" + strings.Join(parts, "+")
+	return f
 }
 
 // wrapCharsets returns the list of named charset IDs available to the
@@ -374,9 +335,9 @@ func wrapAttackerProfiles(_ js.Value, _ []js.Value) any {
 	out := make([]any, len(policy.AttackerProfiles))
 	for i, p := range policy.AttackerProfiles {
 		out[i] = map[string]any{
-			"id":                  p.ID,
-			"description":         p.Description,
-			"guesses_per_second":  p.GuessesPerSec,
+			"id":                 p.ID,
+			"description":        p.Description,
+			"guesses_per_second": p.GuessesPerSec,
 		}
 	}
 	return js.ValueOf(out)

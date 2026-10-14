@@ -8,13 +8,15 @@ import (
 	"testing"
 
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 )
 
 // TestGenerate_ChiSquaredUniformity is a statistical sanity check that
 // Generate produces uniformly distributed runes from each registered
-// charset. It draws a large sample (default 1M characters), counts
-// per-rune frequencies, and computes Pearson's chi-squared statistic
-// against the expected uniform distribution.
+// charset. It draws a large sample (default 1M characters) in chunks
+// no larger than the generation cap, counts per-rune frequencies, and
+// computes Pearson's chi-squared statistic against the expected uniform
+// distribution.
 //
 // Build-tagged `stats` so it does not run in normal `go test ./...`;
 // invoke explicitly: `go test -tags stats -run ChiSquared ./internal/generator`.
@@ -27,12 +29,19 @@ func TestGenerate_ChiSquaredUniformity(t *testing.T) {
 		t.Run(id, func(t *testing.T) {
 			cs, _ := charset.Get(id)
 			counts := make(map[rune]int, cs.Size())
-			out, err := Generate(Request{Charset: cs, Length: sampleSize})
-			if err != nil {
-				t.Fatalf("Generate: %v", err)
-			}
-			for _, r := range out {
-				counts[r]++
+			for got := 0; got < sampleSize; {
+				n := limits.MaxPasswordLength
+				if sampleSize-got < n {
+					n = sampleSize - got
+				}
+				out, err := Generate(Request{Charset: cs, Length: n})
+				if err != nil {
+					t.Fatalf("Generate: %v", err)
+				}
+				for _, r := range out {
+					counts[r]++
+				}
+				got += len([]rune(out))
 			}
 			expected := float64(sampleSize) / float64(cs.Size())
 			var chi2 float64

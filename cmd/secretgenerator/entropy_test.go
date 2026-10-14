@@ -202,14 +202,19 @@ func TestNewEntropyCmd_FlagsRegistered(t *testing.T) {
 	}
 }
 
-func TestObserveClasses(t *testing.T) {
-	if got := observeClasses(""); got != 0 {
-		t.Errorf("empty string classes = %b, want 0", got)
+func TestRunEntropy_CountsRunesNotBytes(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	o := baseEntropyOptions(&stdout, &stderr)
+	o.JSON = true
+	o.Password = "é"
+	if err := runEntropy(o); err != nil {
+		t.Fatalf("runEntropy: %v", err)
 	}
-	if got := classSize(0); got != 0 {
-		t.Errorf("classSize(0) = %d, want 0", got)
+	out := decodeJSON(t, stdout.Bytes())
+	if out.Length != 1 {
+		t.Errorf("length = %d, want 1 rune (the string is 2 bytes)", out.Length)
 	}
-	if got := inferCharsetID(0); got != "empty" {
-		t.Errorf("inferCharsetID(0) = %q", got)
+	if out.CharsetSize != 32 {
+		t.Errorf("charset_size = %d, want 32", out.CharsetSize)
 	}
 }
