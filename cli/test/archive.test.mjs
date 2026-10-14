@@ -57,12 +57,21 @@ test("tarExtractArgs keeps same-drive paths local and pins drive letters", () =>
     ".",
   ]);
   assert.deepEqual(tarExtractArgs("D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip", "zip"), [
-    "--force-local",
     "-xf",
     "D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip",
     "-C",
     ".",
   ]);
+  assert.deepEqual(
+    tarExtractArgs("D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip", "zip", { gnuForceLocal: true }),
+    [
+      "--force-local",
+      "-xf",
+      "D:\\Temp\\secretgenerator_2.0.0_windows_amd64.zip",
+      "-C",
+      ".",
+    ]
+  );
 });
 
 test("unsafeArchiveMember rejects traversal and unexpected files", () => {

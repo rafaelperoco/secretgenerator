@@ -216,7 +216,15 @@ function extract(archive: string, dest: string, format: "tar.gz" | "zip") {
   // destination so a same-drive archive is a relative path. A cross-drive
   // path still has a drive letter; tarExtractArgs adds --force-local.
   const rel = path.relative(dest, archive);
-  const r = spawnSync(tarBin(), tarExtractArgs(rel, format), { cwd: dest, stdio: "inherit" });
+  const bin = tarBin();
+  // GitHub's Windows temp dir and the repo are often on different drives,
+  // so `rel` is an absolute `C:\...` path. System bsdtar accepts that.
+  // GNU tar needs --force-local or it parses the drive letter as a host.
+  const gnuForceLocal = process.platform === "win32" && bin === "tar";
+  const r = spawnSync(bin, tarExtractArgs(rel, format, { gnuForceLocal }), {
+    cwd: dest,
+    stdio: "inherit",
+  });
   if (r.status !== 0) throw new Error(`tar exit ${r.status}`);
 }
 

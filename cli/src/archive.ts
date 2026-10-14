@@ -62,12 +62,6 @@ export function unsafeArchiveMember(name: string, binary: string): string | null
 }
 
 /**
- * tar argv for extraction. A Windows drive prefix makes GNU tar treat the
- * path as a remote host (`Cannot connect to C`), so those paths get
- * `--force-local`. Callers should pass a path relative to the dest cwd
- * whenever the archive and the dest are on the same drive.
- */
-/**
  * Windows CI puts Git's GNU tar first on PATH. That tar rejects zip
  * archives and treats `C:` as a remote host. The system bsdtar reads zip
  * and keeps drive letters local, so prefer it when it is installed.
@@ -81,8 +75,21 @@ export function tarBinary(
   return "tar";
 }
 
-export function tarExtractArgs(archiveArg: string, format: "tar.gz" | "zip"): string[] {
+/**
+ * tar argv for extraction. A Windows drive prefix makes GNU tar treat the
+ * path as a remote host (`Cannot connect to C`). Pass `gnuForceLocal` only
+ * for that tar. The system bsdtar rejects `--force-local` and accepts the
+ * drive letter. Same-drive callers should pass a path relative to the dest.
+ */
+export function tarExtractArgs(
+  archiveArg: string,
+  format: "tar.gz" | "zip",
+  opts: { gnuForceLocal?: boolean } = {}
+): string[] {
   const flag = format === "tar.gz" ? "-xzf" : "-xf";
   const args = [flag, archiveArg, "-C", "."];
-  return /^[A-Za-z]:/.test(archiveArg) ? ["--force-local", ...args] : args;
+  if (opts.gnuForceLocal && /^[A-Za-z]:/.test(archiveArg)) {
+    return ["--force-local", ...args];
+  }
+  return args;
 }
