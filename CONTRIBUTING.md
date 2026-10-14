@@ -111,7 +111,8 @@ To resolve:
 
 release-please opens a release pull request from Conventional Commits on
 `main`. Merging that pull request creates the `vX.Y.Z` tag and the GitHub
-Release. `.github/workflows/release.yml` then produces signed binaries,
+Release. The tag has no component prefix: `release.yml` only runs for tags
+matching `v*`. `.github/workflows/release.yml` then produces signed binaries,
 SBOMs, container images, and SLSA L3 provenance.
 
 The release-please workflow needs a `RELEASE_PLEASE_TOKEN` repository
