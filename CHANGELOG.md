@@ -7,24 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+## [2.1.0](https://github.com/rafaelperoco/secretgenerator/compare/v2.0.0...v2.1.0) (2026-10-14)
 
-- `entropy` counts Unicode code points. A multi-byte character was
-  previously counted once per UTF-8 byte, so the reported upper bound
-  was higher than the character model allows.
-- Generation sizes are capped (password and API-key body 4096,
-  secret 1 MiB, passphrase 256 words, PIN 32 digits) so an unbounded
-  agent request cannot exhaust memory.
-- The WASM/MCP path treats an explicit `minEntropyBits: 0` as "disable
-  the floor", matching the CLI flag. Omitting the field still applies
-  the default floor.
-- `pin --audit-log` warns that SHA-256 of a short PIN is reversible by
-  exhaustive search.
-- The npm installer rejects a non-semver `SECRETGENERATOR_VERSION` and
-  refuses archive members that escape the install directory. Zip
-  extraction no longer interpolates paths into PowerShell. On Windows
-  the installer uses the system `tar`, which reads zip archives, and
-  passes a relative archive path so a drive letter is not a remote host.
 
 ### Added
 
@@ -50,6 +34,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `audit.NewError` and the `Error` struct in `internal/audit` for
   programmatic construction.
 - E2E coverage for every error path under `--json`.
+* add PyPI and crates.io wrappers ([#27](https://github.com/rafaelperoco/secretgenerator/issues/27)) ([ef01ca0](https://github.com/rafaelperoco/secretgenerator/commit/ef01ca0b62352a01d59856f43d935eee86ea3678))
+* expand site install grid with all 8 registries ([#32](https://github.com/rafaelperoco/secretgenerator/issues/32)) ([99a6c57](https://github.com/rafaelperoco/secretgenerator/commit/99a6c57d5ad7c5b7242f493717eda62f6838ea73))
+* per-subcommand pages on the website ([#30](https://github.com/rafaelperoco/secretgenerator/issues/30)) ([bc8dd33](https://github.com/rafaelperoco/secretgenerator/commit/bc8dd3350b1159ae2646bc661ca81cba3c8deaa8))
+* rename PyPI distribution to secretgenerator-py ([#29](https://github.com/rafaelperoco/secretgenerator/issues/29)) ([7cf5f39](https://github.com/rafaelperoco/secretgenerator/commit/7cf5f391a46aa9ac3881546da04c5914c777712a))
+* sitemap.xml and releases.xml RSS feed ([#31](https://github.com/rafaelperoco/secretgenerator/issues/31)) ([f58f061](https://github.com/rafaelperoco/secretgenerator/commit/f58f06126a1fac23b0d7fe1b841d2c969156935e))
+
+
+### Fixed
+
+- `entropy` counts Unicode code points. A multi-byte character was
+  previously counted once per UTF-8 byte, so the reported upper bound
+  was higher than the character model allows.
+- Generation sizes are capped (password and API-key body 4096,
+  secret 1 MiB, passphrase 256 words, PIN 32 digits) so an unbounded
+  agent request cannot exhaust memory.
+- The WASM/MCP path treats an explicit `minEntropyBits: 0` as "disable
+  the floor", matching the CLI flag. Omitting the field still applies
+  the default floor.
+- `pin --audit-log` warns that SHA-256 of a short PIN is reversible by
+  exhaustive search.
+- The npm installer rejects a non-semver `SECRETGENERATOR_VERSION` and
+  refuses archive members that escape the install directory. Zip
+  extraction no longer interpolates paths into PowerShell. On Windows
+  the installer uses the system `tar`, which reads zip archives, and
+  passes a relative archive path so a drive letter is not a remote host.
+* count entropy in runes and cap generation size ([#164](https://github.com/rafaelperoco/secretgenerator/issues/164)) ([675b194](https://github.com/rafaelperoco/secretgenerator/commit/675b194ba4c9686352913f4b8e94de3a35828b3e))
+* **mcp:** override @hono/node-server to 2.0.12 ([#82](https://github.com/rafaelperoco/secretgenerator/issues/82)) ([17f322e](https://github.com/rafaelperoco/secretgenerator/commit/17f322e90a23acb1278277a87cb2bd6a8ead26ed))
+* patch high npm vulns, pin codeql fully, restore npm dependabot ([#67](https://github.com/rafaelperoco/secretgenerator/issues/67)) ([083b68f](https://github.com/rafaelperoco/secretgenerator/commit/083b68f5c0110db0115b315259ec4f402173b417))
 
 ## [2.0.0] — 2026-04-29
 
