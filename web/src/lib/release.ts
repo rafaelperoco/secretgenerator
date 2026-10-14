@@ -1,11 +1,17 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-const manifestPath = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../.release-please-manifest.json",
-);
+// Astro bundles this module into web/dist, so a path relative to
+// import.meta.url does not reach the repo root. `npm run build` runs
+// with cwd = web/.
+const candidates = [
+  join(process.cwd(), "..", ".release-please-manifest.json"),
+  join(process.cwd(), ".release-please-manifest.json"),
+];
+const manifestPath = candidates.find((path) => existsSync(path));
+if (!manifestPath) {
+  throw new Error(`release-please manifest not found. tried ${candidates.join(", ")}`);
+}
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, string>;
 const raw = manifest["."];
 if (!raw) {
