@@ -1,0 +1,35 @@
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # A tag pushed with the default GITHUB_TOKEN does not start other
+      # workflows, so release.yml would not publish. RELEASE_PLEASE_TOKEN
+      # must be a fine-grained PAT or GitHub App token with Contents: write
+      # that is allowed to trigger workflows. Until that secret exists, this
+      # job still opens the release PR.
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Warn when the release tag will not publish
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
+        run: |
+          if [ "$HAS_RELEASE_TOKEN" != "true" ]; then
+            echo "::warning::RELEASE_PLEASE_TOKEN is unset. This tag was created with the default token, so release.yml will not run. Add a token that can trigger workflows."
+            exit 1
+          fi

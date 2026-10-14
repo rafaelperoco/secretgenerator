@@ -1,0 +1,29 @@
+name: pr-title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional:
+    name: conventional commit title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          # Squash merge keeps this title as the commit subject.
+          # release-please reads that subject to decide the next version.
+          pattern='^(feat|fix|perf|revert|docs|style|refactor|test|build|ci|chore)(\([a-z0-9._/-]+\))?(!)?: .+'
+          if ! printf '%s\n' "$TITLE" | grep -Eq "$pattern"; then
+            echo "Pull request title is not a conventional commit:"
+            echo "  $TITLE"
+            echo "Expected: type(scope): subject"
+            echo "Types: feat, fix, perf, revert, docs, style, refactor, test, build, ci, chore"
+            exit 1
+          fi
