@@ -67,6 +67,20 @@ export function unsafeArchiveMember(name: string, binary: string): string | null
  * `--force-local`. Callers should pass a path relative to the dest cwd
  * whenever the archive and the dest are on the same drive.
  */
+/**
+ * Windows CI puts Git's GNU tar first on PATH. That tar rejects zip
+ * archives and treats `C:` as a remote host. The system bsdtar reads zip
+ * and keeps drive letters local, so prefer it when it is installed.
+ */
+export function tarBinary(
+  platform: NodeJS.Platform,
+  systemTar: string,
+  systemTarExists: boolean
+): string {
+  if (platform === "win32" && systemTarExists) return systemTar;
+  return "tar";
+}
+
 export function tarExtractArgs(archiveArg: string, format: "tar.gz" | "zip"): string[] {
   const flag = format === "tar.gz" ? "-xzf" : "-xf";
   const args = [flag, archiveArg, "-C", "."];

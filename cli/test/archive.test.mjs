@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { releaseTag, tarExtractArgs, unsafeArchiveMember } from "../dist/archive.js";
+import { releaseTag, tarBinary, tarExtractArgs, unsafeArchiveMember } from "../dist/archive.js";
 
 test("releaseTag accepts semver tags and bare versions", () => {
   assert.equal(releaseTag("v2.0.0"), "v2.0.0");
@@ -35,6 +35,12 @@ test("unsafeArchiveMember allows the goreleaser layout", () => {
     assert.equal(unsafeArchiveMember(name, "secretgenerator"), null, name);
   }
   assert.equal(unsafeArchiveMember("secretgenerator.exe", "secretgenerator.exe"), null);
+});
+
+test("tarBinary prefers Windows system bsdtar over Git GNU tar", () => {
+  assert.equal(tarBinary("win32", "C:\\Windows\\System32\\tar.exe", true), "C:\\Windows\\System32\\tar.exe");
+  assert.equal(tarBinary("win32", "C:\\Windows\\System32\\tar.exe", false), "tar");
+  assert.equal(tarBinary("linux", "/usr/bin/tar", true), "tar");
 });
 
 test("tarExtractArgs keeps same-drive paths local and pins drive letters", () => {

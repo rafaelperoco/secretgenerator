@@ -31,7 +31,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { ReadableStream } from "node:stream/web";
 import { detectAsset, UnsupportedPlatformError } from "./platform.js";
-import { releaseTag, tarExtractArgs, unsafeArchiveMember } from "./archive.js";
+import { releaseTag, tarBinary, tarExtractArgs, unsafeArchiveMember } from "./archive.js";
 import {
   cosignAvailable,
   verifyChecksum,
@@ -177,10 +177,15 @@ async function download(
   await pipeline(nodeStream, createWriteStream(out));
 }
 
+function tarBin(): string {
+  const system = path.join(process.env.SystemRoot || "C:\\Windows", "System32", "tar.exe");
+  return tarBinary(process.platform, system, existsSync(system));
+}
+
 function assertSafeArchive(archive: string, binary: string): void {
   // Basename plus cwd: GNU tar on Windows reads `C:` in an absolute path
   // as a remote host and fails with "Cannot connect to C".
-  const listed = spawnSync("tar", ["-tf", path.basename(archive)], {
+  const listed = spawnSync(tarBin(), ["-tf", path.basename(archive)], {
     cwd: path.dirname(archive),
     encoding: "utf8",
   });
@@ -211,7 +216,7 @@ function extract(archive: string, dest: string, format: "tar.gz" | "zip") {
   // destination so a same-drive archive is a relative path. A cross-drive
   // path still has a drive letter; tarExtractArgs adds --force-local.
   const rel = path.relative(dest, archive);
-  const r = spawnSync("tar", tarExtractArgs(rel, format), { cwd: dest, stdio: "inherit" });
+  const r = spawnSync(tarBin(), tarExtractArgs(rel, format), { cwd: dest, stdio: "inherit" });
   if (r.status !== 0) throw new Error(`tar exit ${r.status}`);
 }
 

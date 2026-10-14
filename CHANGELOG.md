@@ -22,9 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exhaustive search.
 - The npm installer rejects a non-semver `SECRETGENERATOR_VERSION` and
   refuses archive members that escape the install directory. Zip
-  extraction no longer interpolates paths into PowerShell. Archive
-  paths passed to `tar` stay relative, so a Windows path is not read
-  as a remote host.
+  extraction no longer interpolates paths into PowerShell. On Windows
+  the installer uses the system `tar`, which reads zip archives, and
+  passes a relative archive path so a drive letter is not a remote host.
 
 ### Added
 
