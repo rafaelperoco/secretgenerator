@@ -8,6 +8,7 @@ import (
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
 	"github.com/rafaelperoco/secretgenerator/internal/generator"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/spf13/cobra"
 )
@@ -77,8 +78,8 @@ func runPIN(o pinOptions) error {
 		}
 		applyStdinPIN(&o, req)
 	}
-	if o.Digits < 4 {
-		return e.fail(ExitInvalidArgs, fmt.Errorf("digits must be >= 4, got %d", o.Digits))
+	if o.Digits < 4 || o.Digits > limits.MaxPINDigits {
+		return e.fail(ExitInvalidArgs, fmt.Errorf("digits must be in 4..%d, got %d", limits.MaxPINDigits, o.Digits))
 	}
 	if !o.AcknowledgeLowEntropy {
 		return e.fail(ExitEntropyTooLow,
@@ -111,6 +112,15 @@ func runPIN(o pinOptions) error {
 	}
 
 	bits := policy.EntropyBits(o.Digits, 10)
+	warnings := []string{
+		fmt.Sprintf("PIN entropy is %.1f bits; safe only with verifier-side rate limiting", bits),
+	}
+	// SHA-256 of a short PIN is reversible by exhaustive search. The log
+	// entry must not look like a one-way record of a high-entropy secret.
+	if o.AuditLogPath != "" {
+		warnings = append(warnings,
+			"audit log stores SHA-256 of the PIN; a short PIN can be recovered from that hash by exhaustive search, so protect the log like the PIN itself")
+	}
 	out := audit.Output{
 		Length:      o.Digits,
 		CharsetID:   cs.ID,
@@ -118,9 +128,7 @@ func runPIN(o pinOptions) error {
 		EntropyBits: bits,
 		Algorithm:   "crypto/rand+weak-pin-rejection",
 		Subcommand:  "pin",
-		Warnings: []string{
-			fmt.Sprintf("PIN entropy is %.1f bits; safe only with verifier-side rate limiting", bits),
-		},
+		Warnings:    warnings,
 	}
 	return emit(e, out, pin)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
 	"github.com/rafaelperoco/secretgenerator/internal/charset"
 	"github.com/rafaelperoco/secretgenerator/internal/generator"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/spf13/cobra"
 )
@@ -85,8 +86,8 @@ func runAPIKey(o apiKeyOptions) error {
 	if strings.ContainsAny(o.Prefix, " \t\n\r") {
 		return e.fail(ExitInvalidArgs, fmt.Errorf("prefix must not contain whitespace"))
 	}
-	if o.Length <= 0 {
-		return e.fail(ExitInvalidArgs, fmt.Errorf("length must be > 0, got %d", o.Length))
+	if err := limits.CheckPositive(o.Length, limits.MaxPasswordLength, "length"); err != nil {
+		return e.fail(ExitInvalidArgs, err)
 	}
 
 	cs, err := charset.Get("base62-v1")

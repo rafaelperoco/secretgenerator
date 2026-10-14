@@ -10,6 +10,8 @@ import (
 	"math/big"
 	"strings"
 	"sync"
+
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 )
 
 //go:embed eff_large_wordlist.txt
@@ -79,8 +81,8 @@ func loadEFFLarge() {
 // crypto/rand.Reader when nil). Any error from r aborts immediately;
 // this function never returns a partial slice on error.
 func PickEFFLarge(n int, r io.Reader) ([]string, error) {
-	if n <= 0 {
-		return nil, fmt.Errorf("words: n must be > 0, got %d", n)
+	if err := limits.CheckPositive(n, limits.MaxPassphraseWords, "words"); err != nil {
+		return nil, err
 	}
 	src := r
 	if src == nil {

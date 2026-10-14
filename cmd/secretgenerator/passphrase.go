@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/rafaelperoco/secretgenerator/internal/audit"
+	"github.com/rafaelperoco/secretgenerator/internal/limits"
 	"github.com/rafaelperoco/secretgenerator/internal/policy"
 	"github.com/rafaelperoco/secretgenerator/internal/words"
 	"github.com/spf13/cobra"
@@ -97,8 +98,8 @@ func runPassphrase(o passphraseOptions) error {
 		}
 		applyStdinPassphrase(&o, req)
 	}
-	if o.Words <= 0 {
-		return e.fail(ExitInvalidArgs, fmt.Errorf("words must be > 0, got %d", o.Words))
+	if err := limits.CheckPositive(o.Words, limits.MaxPassphraseWords, "words"); err != nil {
+		return e.fail(ExitInvalidArgs, err)
 	}
 	if o.Separator == "" {
 		return e.fail(ExitInvalidArgs,
