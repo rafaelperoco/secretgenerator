@@ -61,9 +61,19 @@ each charset's runes; any modification fails the test until the ID changes.
 
 ## Commit style
 
-- Single-line, imperative, English: `add chi-squared statistical test for charset uniformity`
-- No `:` prefix tags (`feat:`, `fix:`, etc.)
-- No Claude-generated signatures (`Co-Authored-By` etc.)
+Commits and squash-merge titles follow Conventional Commits. release-please
+reads the subject on `main` to open the next release:
+
+- `feat:` opens a minor release
+- `fix:` and `perf:` open a patch release
+- `docs:`, `refactor:`, `test:`, `build:`, `ci:`, and `chore:` do not bump the version
+
+Write the subject in imperative English: `fix: count entropy in runes`.
+A scope is optional: `fix(mcp): override @hono/node-server`. Pull request
+titles are checked by `.github/workflows/pr-title.yml` because squash merge
+keeps the title as the commit subject.
+
+Do not add assistant signatures (`Co-Authored-By` and similar).
 
 ## Pull request workflow
 
@@ -99,9 +109,24 @@ To resolve:
 
 ## Releases
 
-Releases are tag-driven. Pushing `vX.Y.Z` triggers `.github/workflows/release.yml`
-which produces signed binaries, SBOMs, container images, and SLSA L3
-provenance. Only repo maintainers can push tags.
+release-please opens a release pull request from Conventional Commits on
+`main`. Merging that pull request creates the `vX.Y.Z` tag and the GitHub
+Release. `.github/workflows/release.yml` then produces signed binaries,
+SBOMs, container images, and SLSA L3 provenance.
+
+The release-please workflow needs a `RELEASE_PLEASE_TOKEN` repository
+secret: a fine-grained PAT or GitHub App token with Contents write that is
+allowed to trigger workflows. A tag created with the default `GITHUB_TOKEN`
+does not start `release.yml`. The manifest in
+`.release-please-manifest.json` is `2.0.0`, so the next release is computed
+from commits after that tag.
+
+The hand-written `## [Unreleased]` section in `CHANGELOG.md` is not
+regenerated from commits. Review the first release pull request and fold
+that prose into the generated section before merging.
+
+Pushing a tag by hand still runs `release.yml`. Prefer the release pull
+request so the changelog and the tag stay in step.
 
 Pre-release alpha tags (`v2.0.0-alpha.N`) are used to validate the supply
 chain pipeline before any GA tag.

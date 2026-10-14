@@ -5,8 +5,11 @@ updates:
     schedule:
       interval: weekly
     commit-message:
-      prefix: deps
-    open-pull-requests-limit: 5
+      # Ships inside the published binary, so a bump is a patch release.
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    open-pull-requests-limit: 10
 
   - package-ecosystem: github-actions
     directory: /
@@ -14,28 +17,39 @@ updates:
       interval: weekly
     commit-message:
       prefix: ci
-    open-pull-requests-limit: 5
+    groups:
+      # codeql.yml pins init, autobuild, and analyze to one SHA.
+      # A PR that bumps only one of them fails CI with a version mismatch.
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /web
     schedule:
       interval: weekly
     commit-message:
+      # The site deploys from main. A web bump must not cut a CLI release.
       prefix: ci
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /mcp
     schedule:
       interval: weekly
     commit-message:
-      prefix: ci
-    open-pull-requests-limit: 5
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    open-pull-requests-limit: 10
 
   - package-ecosystem: npm
     directory: /cli
     schedule:
       interval: weekly
     commit-message:
-      prefix: ci
-    open-pull-requests-limit: 5
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    open-pull-requests-limit: 10

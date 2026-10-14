@@ -153,7 +153,10 @@ release:
   github:
     owner: rafaelperoco
     name: secretgenerator
-  mode: replace
+  # release-please opens the GitHub Release before this workflow runs.
+  # keep-existing leaves those notes in place and still uploads artifacts.
+  # A hand-pushed tag, with no release yet, still creates one.
+  mode: keep-existing
   draft: false
   prerelease: auto
   name_template: '{{ .ProjectName }} {{ .Version }}'
