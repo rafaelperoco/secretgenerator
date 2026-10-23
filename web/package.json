@@ -23,7 +23,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "astro": "^7.3.8",
+    "astro": "^7.4.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "satori": "^0.56.1",
