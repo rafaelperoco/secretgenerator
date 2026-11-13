@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1](https://github.com/rafaelperoco/secretgenerator/compare/v2.1.0...v2.1.1) (2026-10-14)
+
+
+### Fixed
+
+* read the release manifest from the repo root during the site build ([#182](https://github.com/rafaelperoco/secretgenerator/issues/182)) ([77e5c05](https://github.com/rafaelperoco/secretgenerator/commit/77e5c056febb2501cb796d5c05d7d3b897bee393))
+
 ## [Unreleased]
 
 ## [2.1.0](https://github.com/rafaelperoco/secretgenerator/compare/v2.0.0...v2.1.0) (2026-10-14)
