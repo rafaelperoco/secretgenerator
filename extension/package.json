@@ -1,0 +1,23 @@
+{
+  "name": "secretgenerator-extension",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Browser extension (Chrome, Edge, Firefox) that generates credentials locally with the secretgenerator WASM core.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:chrome": "node scripts/build.mjs --target chrome",
+    "build:firefox": "node scripts/build.mjs --target firefox",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.0",
+    "typescript": "^5.9.3"
+  }
+}
