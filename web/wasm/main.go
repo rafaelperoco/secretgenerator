@@ -34,7 +34,12 @@ import (
 	"github.com/rafaelperoco/secretgenerator/pkg/secretgen"
 )
 
-const browserVersion = "secretgenerator-web@2.0.0"
+// browserVersion identifies the build in every result's "version" field.
+// It is a variable so other embedders can stamp their own identity at link
+// time, for example the browser extension:
+//
+//	-ldflags "-X main.browserVersion=secretgenerator-extension@2.1.0"
+var browserVersion = "secretgenerator-web@2.0.0"
 
 func main() {
 	js.Global().Set("secretgen", js.ValueOf(map[string]any{
