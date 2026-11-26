@@ -39,9 +39,18 @@ import (
 // time, for example the browser extension:
 //
 //	-ldflags "-X main.browserVersion=secretgenerator-extension@2.1.0"
-var browserVersion = "secretgenerator-web@2.0.0"
+//
+// It has no initializer on purpose: TinyGo applies -X only to string
+// variables without one (an initializer runs at start-up and overwrites
+// the stamped value). main falls back to defaultBrowserVersion.
+var browserVersion string
+
+const defaultBrowserVersion = "secretgenerator-web@2.0.0"
 
 func main() {
+	if browserVersion == "" {
+		browserVersion = defaultBrowserVersion
+	}
 	js.Global().Set("secretgen", js.ValueOf(map[string]any{
 		"password":         js.FuncOf(wrapPassword),
 		"secret":           js.FuncOf(wrapSecret),
