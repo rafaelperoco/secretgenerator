@@ -1,6 +1,6 @@
 // Injected into the page with chrome.scripting.executeScript. The function
 // is serialized with toString(), so it MUST be self-contained: no imports,
-// no module-scope helpers, no closure variables. test/fill-selfcontained
+// no module-scope helpers, no closure variables. test/unit/fill.test.mjs
 // enforces that.
 //
 // It runs in the extension's ISOLATED world: page scripts cannot tamper
@@ -133,6 +133,7 @@ export function fillFocusedField(value: string, mode: FillMode): FillResult {
       return target.value === value;
     };
 
+    const previous = field.value;
     let intact = write(field, false);
     let filled = 1;
 
@@ -140,6 +141,12 @@ export function fillFocusedField(value: string, mode: FillMode): FillResult {
     // that directly follows in the same <form>, and only there: without a
     // form there is no safe way to tell a confirmation from an unrelated
     // field elsewhere on the page.
+    //
+    // The confirmation is written when it is empty or still mirrors what
+    // the field held before this fill. The second case is a repeated fill:
+    // skipping it would leave the form with two different passwords behind
+    // a success message. A confirmation that holds anything else was typed
+    // by the user and is left alone.
     const form = field.form;
     if (kind === "password" && form && !autocomplete(field).includes("current-password")) {
       const passwords = Array.from(form.elements).filter(
@@ -149,7 +156,7 @@ export function fillFocusedField(value: string, mode: FillMode): FillResult {
       const next = index >= 0 ? passwords[index + 1] : undefined;
       if (
         next &&
-        !next.value &&
+        (next.value === "" || next.value === previous) &&
         !next.disabled &&
         !next.readOnly &&
         visible(next) &&

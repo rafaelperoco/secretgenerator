@@ -1,0 +1,477 @@
+/* Popup stylesheet. The extension CSP allows no inline styles, so every
+   rule lives here and scripts only toggle `hidden`, classes and data-*. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Light theme: counterparts of the project site's dark palette, chosen
+     for at least 4.5:1 text contrast on both --bg and --panel. */
+  --bg: #ffffff;
+  --panel: #f4f5f7;
+  --line: #d9dce1;
+  /* Boundary of inputs and buttons: at least 3:1 on --bg and --panel,
+     which the decorative --line is not. */
+  --control: #868b93;
+  --text: #16181c;
+  --muted: #5a5f66;
+  --accent: #0369a1;
+  --on-accent: #ffffff;
+  --warn: #92400e;
+  --ok: #166534;
+  --bad: #b91c1c;
+
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* The palette of secretgenerator.org. */
+    --bg: #0d0e10;
+    --panel: #131418;
+    --line: #1f2125;
+    --control: #6b6f76;
+    --text: #e6e7e9;
+    --muted: #8a8d92;
+    --accent: #7dd3fc;
+    --on-accent: #0d0e10;
+    --warn: #fbbf24;
+    --ok: #4ade80;
+    --bad: #f87171;
+  }
+}
+
+/* Any author `display` rule would otherwise override the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  background: var(--bg);
+}
+
+/* Browsers size the popup to the body, up to 800x600. The width is set
+   here and not on :root because Firefox measures the body. Everything
+   inside is fluid and the body may shrink: once the content is taller
+   than 600px Chrome takes the scrollbar out of the 360px, and Firefox
+   gives a popup in its overflow menu a fixed width.
+
+   Line heights, paddings and reserved heights are whole pixels so the
+   body height is one too. Chrome truncates a fractional popup height,
+   which leaves the page scrollable by one pixel. */
+body {
+  box-sizing: border-box;
+  width: 360px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/18px var(--sans);
+  overflow-wrap: anywhere;
+}
+
+p,
+h1,
+ul,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Secondary text. */
+.notice,
+.hint,
+.status,
+.facts,
+.field > label,
+.field-label {
+  font-size: 12px;
+  line-height: 17px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.header-icon {
+  display: block;
+}
+
+.header-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notice {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--warn);
+  border-left-width: 3px;
+  border-radius: 6px;
+}
+
+/* Tabs. The six labels share one row in both shipped locales, with about
+   15% of the row to spare when measured with Inter. Wrapping is the
+   fallback for wider fonts, so the row can never scroll sideways. */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -12px 8px;
+  padding: 0 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  flex: 1 1 auto;
+  margin-bottom: -1px;
+  padding: 7px 3px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 4px 4px 0 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.tab:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Generated value. Two lines are reserved so the popup has its final
+   height before the WASM core has produced anything, and so the buttons
+   below stay put for values of ordinary length (an eight-word passphrase
+   fits). Longer values grow the box to six lines, then it scrolls. */
+
+.value {
+  box-sizing: border-box;
+  min-height: 58px;
+  max-height: 138px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  font: 13px/20px var(--mono);
+  /* Shown exactly as generated: a separator may be one or more spaces. */
+  white-space: pre-wrap;
+  /* Random strings fill every line. With ordinary wrapping a "-" or "?"
+     in the value ends a line early, so the same kind of value would take
+     two lines on one click and three on the next. */
+  line-break: anywhere;
+  user-select: all;
+}
+
+/* A passphrase is read and sometimes typed by hand: keep its words whole. */
+.value[data-kind="passphrase"] {
+  line-break: auto;
+}
+
+.value:empty::before {
+  content: "\2014";
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.button {
+  flex: 1 1 auto;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--control);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+.button:active:not(:disabled) {
+  background: var(--line);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.button-primary:active:not(:disabled) {
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.result > .hint {
+  margin-top: 6px;
+}
+
+/* One line is always reserved, so a short result ("Copied") does not move
+   what is below it. */
+.status {
+  min-height: 17px;
+  margin: 6px 0;
+}
+
+.status[data-state="ok"] {
+  color: var(--ok);
+}
+
+.status[data-state="bad"] {
+  color: var(--bad);
+}
+
+.status-warning {
+  color: var(--warn);
+}
+
+/* On the Check tab there are no buttons to report on. The element stays
+   in the page (it is a live region) but gives up its reserved line. */
+.result[hidden] + .status:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+/* Entropy and crack time, or the reason there is no value. The reserved
+   height (one line plus the two-line summary) keeps the options below in
+   place when one replaces the other, for example while the length slider
+   crosses the entropy floor. */
+
+.facts {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 53px;
+}
+
+#meta,
+#check-details {
+  display: grid;
+  gap: 2px;
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.error {
+  padding: 6px 8px;
+  border: 1px solid var(--bad);
+  border-left-width: 3px;
+  border-radius: 6px;
+  color: var(--bad);
+}
+
+.warnings {
+  display: grid;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.warnings li {
+  padding-left: 8px;
+  border-left: 3px solid var(--warn);
+}
+
+.crack summary {
+  /* Two lines: the longer estimates wrap, the shorter ones do not. */
+  min-height: 34px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.crack-value {
+  color: var(--text);
+}
+
+.crack-list {
+  margin-top: 4px;
+}
+
+.crack-list dt {
+  color: var(--muted);
+}
+
+.crack-list dd {
+  margin-bottom: 6px;
+}
+
+/* Options */
+
+.panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+/* The Check tab has no result block above it to be separated from. */
+#panel-entropy {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.field-top {
+  align-items: start;
+}
+
+.field > label,
+.field-label {
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"],
+select {
+  box-sizing: border-box;
+  width: 100%;
+  height: 28px;
+  padding: 3px 8px;
+  border: 1px solid var(--control);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+/* Characters typed here end up in a credential, so they get the same
+   unambiguous glyphs as the value. */
+input[type="text"],
+input[type="password"] {
+  font-family: var(--mono);
+}
+
+input.short {
+  width: 72px;
+}
+
+input[type="checkbox"],
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+.length-control {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.length-control input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+
+.checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 8px;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 2px 0;
+}
+
+.check-row {
+  display: flex;
+  gap: 8px;
+}
+
+.check-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Wide enough for both labels, so the toggle does not resize the input. */
+.check-row .button {
+  flex: none;
+  min-width: 76px;
+  min-height: 28px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Footer */
+
+.footer {
+  display: grid;
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.footer-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 8px;
+}
+
+.key {
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+}

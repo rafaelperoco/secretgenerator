@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>secretgenerator</title>
+    <link rel="stylesheet" href="popup.css">
+    <script type="module" src="popup.js"></script>
+  </head>
+  <body>
+    <!-- Text comes from _locales through data-i18n* attributes (see lib/i18n.ts). -->
+    <header class="header">
+      <img class="header-icon" src="../icons/icon-32.png" width="20" height="20" alt="">
+      <h1 class="header-name" data-i18n="extName"></h1>
+    </header>
+
+    <p id="notice" class="notice" role="status" hidden></p>
+
+    <div class="tabs" role="tablist" data-i18n-aria-label="popupTabsLabel">
+      <button type="button" class="tab" role="tab" id="tab-password" aria-controls="panel-password" aria-selected="true" tabindex="0" data-i18n="popupTabPassword"></button>
+      <button type="button" class="tab" role="tab" id="tab-passphrase" aria-controls="panel-passphrase" aria-selected="false" tabindex="-1" data-i18n="popupTabPassphrase"></button>
+      <button type="button" class="tab" role="tab" id="tab-secret" aria-controls="panel-secret" aria-selected="false" tabindex="-1" data-i18n="popupTabSecret"></button>
+      <button type="button" class="tab" role="tab" id="tab-apiKey" aria-controls="panel-apiKey" aria-selected="false" tabindex="-1" data-i18n="popupTabApiKey"></button>
+      <button type="button" class="tab" role="tab" id="tab-pin" aria-controls="panel-pin" aria-selected="false" tabindex="-1" data-i18n="popupTabPin"></button>
+      <button type="button" class="tab" role="tab" id="tab-entropy" aria-controls="panel-entropy" aria-selected="false" tabindex="-1" data-i18n="popupTabEntropy"></button>
+    </div>
+
+    <main>
+      <!-- #result and #facts belong to the five generator tabs and are hidden
+           on the Check tab. #status sits between them so it stays next to the
+           buttons and is never hidden: a live region must exist before it is
+           written to. -->
+      <div id="result" class="result">
+        <div id="output" class="value" role="region" tabindex="0" data-i18n-aria-label="popupOutputLabel"></div>
+        <div class="actions">
+          <button type="button" id="btn-generate" class="button" data-i18n="popupRegenerate"></button>
+          <button type="button" id="btn-copy" class="button" data-i18n="popupCopy" disabled></button>
+          <button type="button" id="btn-fill" class="button button-primary" data-i18n="popupFill" aria-describedby="fill-hint" disabled></button>
+        </div>
+        <p id="fill-hint" class="hint" hidden></p>
+      </div>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <div id="facts" class="facts">
+        <div id="meta" hidden>
+          <p class="meta-line"><span id="entropy-bits"></span> &middot; <span id="length"></span></p>
+          <details id="crack-details" class="crack">
+            <summary><span data-i18n="popupCrackLabel"></span> <span id="crack-time" class="crack-value"></span></summary>
+            <dl id="crack-list" class="crack-list"></dl>
+          </details>
+        </div>
+        <p id="hint" class="hint" hidden></p>
+        <p id="error" class="error" role="alert" hidden></p>
+        <ul id="warnings" class="warnings" hidden></ul>
+      </div>
+
+      <div id="panel-password" class="panel" role="tabpanel" aria-labelledby="tab-password">
+        <div class="field">
+          <label for="pw-length" data-i18n="popupOptLength"></label>
+          <div class="length-control">
+            <input id="pw-length" type="number" inputmode="numeric" step="1">
+            <input id="pw-length-range" type="range" step="1" data-i18n-aria-label="popupOptLengthSlider">
+          </div>
+        </div>
+        <div class="field">
+          <label for="pw-charset" data-i18n="popupOptCharset"></label>
+          <select id="pw-charset"></select>
+        </div>
+        <div class="field field-top" role="group" aria-labelledby="pw-classes-label">
+          <span id="pw-classes-label" class="field-label" data-i18n="popupOptRequired"></span>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="pw-class-lower"><span data-i18n="popupClassLower"></span></label>
+            <label class="check"><input type="checkbox" id="pw-class-upper"><span data-i18n="popupClassUpper"></span></label>
+            <label class="check"><input type="checkbox" id="pw-class-digit"><span data-i18n="popupClassDigit"></span></label>
+            <label class="check"><input type="checkbox" id="pw-class-symbol"><span data-i18n="popupClassSymbol"></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="pw-exclude" data-i18n="popupOptExclude"></label>
+          <input id="pw-exclude" type="text" maxlength="128" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <label class="check"><input type="checkbox" id="pw-allow-weak"><span data-i18n="popupOptAllowWeak"></span></label>
+      </div>
+
+      <div id="panel-passphrase" class="panel" role="tabpanel" aria-labelledby="tab-passphrase" hidden>
+        <div class="field">
+          <label for="pp-words" data-i18n="popupOptWords"></label>
+          <input id="pp-words" class="short" type="number" inputmode="numeric" step="1">
+        </div>
+        <div class="field">
+          <label for="pp-separator" data-i18n="popupOptSeparator"></label>
+          <!-- The placeholders below are the core's defaults for an empty value. -->
+          <input id="pp-separator" class="short" type="text" maxlength="8" placeholder="-" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <label class="check"><input type="checkbox" id="pp-capitalize"><span data-i18n="popupOptCapitalize"></span></label>
+        <label class="check"><input type="checkbox" id="pp-digit-suffix"><span data-i18n="popupOptDigitSuffix"></span></label>
+      </div>
+
+      <div id="panel-secret" class="panel" role="tabpanel" aria-labelledby="tab-secret" hidden>
+        <div class="field">
+          <label for="sc-bytes" data-i18n="popupOptBytes"></label>
+          <input id="sc-bytes" class="short" type="number" inputmode="numeric" step="1">
+        </div>
+        <div class="field">
+          <label for="sc-encoding" data-i18n="popupOptEncoding"></label>
+          <select id="sc-encoding"></select>
+        </div>
+        <div class="field">
+          <label for="sc-prefix" data-i18n="popupOptPrefix"></label>
+          <input id="sc-prefix" type="text" maxlength="64" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div id="panel-apiKey" class="panel" role="tabpanel" aria-labelledby="tab-apiKey" hidden>
+        <div class="field">
+          <label for="ak-prefix" data-i18n="popupOptPrefix"></label>
+          <input id="ak-prefix" type="text" maxlength="32" placeholder="sk" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="ak-separator" data-i18n="popupOptSeparator"></label>
+          <input id="ak-separator" class="short" type="text" maxlength="4" placeholder="_" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="ak-length" data-i18n="popupOptKeyLength"></label>
+          <input id="ak-length" class="short" type="number" inputmode="numeric" step="1">
+        </div>
+      </div>
+
+      <div id="panel-pin" class="panel" role="tabpanel" aria-labelledby="tab-pin" hidden>
+        <div class="field">
+          <label for="pin-digits" data-i18n="popupOptDigits"></label>
+          <input id="pin-digits" class="short" type="number" inputmode="numeric" step="1">
+        </div>
+        <label class="check"><input type="checkbox" id="pin-ack"><span data-i18n="popupPinAck"></span></label>
+      </div>
+
+      <div id="panel-entropy" class="panel" role="tabpanel" aria-labelledby="tab-entropy" hidden>
+        <label for="check-input" class="field-label" data-i18n="popupCheckLabel"></label>
+        <div class="check-row">
+          <input id="check-input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button type="button" id="check-toggle" class="button" aria-controls="check-input" data-i18n="popupCheckShow"></button>
+        </div>
+        <div id="check-result" class="facts">
+          <p id="check-hint" class="hint" data-i18n="popupCheckHint"></p>
+          <div id="check-details" hidden>
+            <p class="meta-line"><span id="check-bits"></span> &middot; <span id="check-length"></span></p>
+            <p id="check-classes" class="meta-line"></p>
+            <details class="crack">
+              <summary><span data-i18n="popupCrackLabel"></span> <span id="check-crack-time" class="crack-value"></span></summary>
+              <dl id="check-crack-list" class="crack-list"></dl>
+            </details>
+            <p class="hint" data-i18n="popupCheckCaveat"></p>
+          </div>
+          <p id="check-error" class="error" role="alert" hidden></p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p class="footer-line">
+        <span id="shortcut-line"><span data-i18n="popupShortcutLabel"></span> <span id="shortcut"></span></span>
+        <span><span data-i18n="popupVersionLabel"></span> <span id="version"></span></span>
+      </p>
+      <p id="shortcut-hint" hidden></p>
+      <p data-i18n="popupPrivacyNote"></p>
+    </footer>
+  </body>
+</html>

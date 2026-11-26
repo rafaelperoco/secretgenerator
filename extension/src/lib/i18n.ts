@@ -6,6 +6,15 @@ export function t(key: string, ...substitutions: string[]): string {
 }
 
 /**
+ * BCP 47 tag of the locale the messages come from. That is not always the
+ * browser's UI language: for a language without a _locales folder the
+ * browser falls back to default_locale and the text is English.
+ */
+export function languageTag(): string {
+  return chrome.i18n.getMessage("languageTag") || "en";
+}
+
+/**
  * Fills in static markup. Supported attributes:
  *   data-i18n="key"              -> textContent
  *   data-i18n-title="key"        -> title
@@ -28,5 +37,7 @@ export function localize(root: ParentNode = document): void {
       el.setAttribute(attr, t(el.dataset[data] ?? ""));
     }
   }
-  if (root === document) document.documentElement.lang = chrome.i18n.getUILanguage();
+  // Screen readers pick the voice from this, so it names the language of
+  // the text and not the language of the browser.
+  if (root === document) document.documentElement.lang = languageTag();
 }

@@ -11,6 +11,10 @@
     "message": "secretgenerator",
     "description": "Toolbar button tooltip."
   },
+  "languageTag": {
+    "message": "pt-BR",
+    "description": "BCP 47 tag of the language this file is written in. Not shown: it sets the lang attribute of the popup and the number format."
+  },
   "menuFillPassword": {
     "message": "Gerar senha e preencher",
     "description": "Context menu item on editable fields."
@@ -73,5 +77,224 @@
     "message": "Não foi possível gerar uma senha com as configurações atuais: $REASON$",
     "description": "The generator refused the saved password settings. REASON is the core's English error text.",
     "placeholders": { "reason": { "content": "$1", "example": "entropy below floor" } }
+  },
+  "popupTabsLabel": {
+    "message": "Tipo de credencial",
+    "description": "Accessible name of the popup's tab list."
+  },
+  "popupTabPassword": {
+    "message": "Senha",
+    "description": "Tab: random password. Keep the six tab labels short: they share one 360px row."
+  },
+  "popupTabPassphrase": {
+    "message": "Frase-senha",
+    "description": "Tab: passphrase made of dictionary words. Keep it short (see popupTabPassword)."
+  },
+  "popupTabSecret": {
+    "message": "Segredo",
+    "description": "Tab: random bytes encoded as text, for tokens and keys. Keep it short (see popupTabPassword)."
+  },
+  "popupTabApiKey": {
+    "message": "API",
+    "description": "Tab: API key with a prefix. Keep it short (see popupTabPassword)."
+  },
+  "popupTabPin": {
+    "message": "PIN",
+    "description": "Tab: numeric PIN. Keep it short (see popupTabPassword)."
+  },
+  "popupTabEntropy": {
+    "message": "Verificar",
+    "description": "Tab: estimate the entropy of a password the user types. Keep it short (see popupTabPassword)."
+  },
+  "popupOutputLabel": {
+    "message": "Valor gerado",
+    "description": "Accessible name of the box that shows the generated value."
+  },
+  "popupRegenerate": {
+    "message": "Gerar outro",
+    "description": "Button: generate a new value with the same options."
+  },
+  "popupCopy": {
+    "message": "Copiar",
+    "description": "Button: copy the generated value to the clipboard."
+  },
+  "popupFill": {
+    "message": "Preencher na página",
+    "description": "Button: write the generated value into the field that has focus on the page."
+  },
+  "popupCopied": {
+    "message": "Copiado",
+    "description": "Status after the value was copied to the clipboard."
+  },
+  "popupCopyFailed": {
+    "message": "Não foi possível copiar. Selecione o valor e copie manualmente.",
+    "description": "Status when the browser refused the clipboard write."
+  },
+  "popupNoValue": {
+    "message": "Ainda não há um valor.",
+    "description": "Tooltip of the disabled Copy and Fill buttons while nothing has been generated."
+  },
+  "popupFillUnavailable": {
+    "message": "Não é possível preencher nesta página. Use Copiar.",
+    "description": "Hint and tooltip when the active tab is a page extensions cannot script (browser pages, extension stores)."
+  },
+  "popupFillInsecure": {
+    "message": "Atenção: esta página não usa HTTPS.",
+    "description": "Appended to the fill status when the page was loaded over plain HTTP."
+  },
+  "popupSaveFailed": {
+    "message": "Não foi possível salvar as configurações.",
+    "description": "Status when writing the options to extension storage failed."
+  },
+  "popupEntropy": {
+    "message": "$BITS$ bits de entropia",
+    "description": "Entropy of the value. BITS is a number with one decimal.",
+    "placeholders": { "bits": { "content": "$1", "example": "119.1" } }
+  },
+  "popupLengthOne": {
+    "message": "1 caractere",
+    "description": "Length of a value that is exactly one character long."
+  },
+  "popupLengthMany": {
+    "message": "$COUNT$ caracteres",
+    "description": "Length of the value. COUNT is never 1.",
+    "placeholders": { "count": { "content": "$1", "example": "20" } }
+  },
+  "popupCrackLabel": {
+    "message": "Tempo para quebrar (adversário estatal):",
+    "description": "Label before an estimated brute-force time such as '3 years'. It is also the summary of a collapsible list with the estimates for weaker attackers."
+  },
+  "popupPinHint": {
+    "message": "Um PIN tem pouquíssima entropia e só é seguro onde as tentativas são limitadas. Marque a caixa abaixo para gerar um.",
+    "description": "Shown instead of a value on the PIN tab until the acknowledgement box is ticked."
+  },
+  "popupPinAck": {
+    "message": "PINs têm baixa entropia; estou ciente",
+    "description": "Checkbox the user must tick before a PIN is generated."
+  },
+  "popupOptLength": {
+    "message": "Comprimento",
+    "description": "Option label: password length in characters."
+  },
+  "popupOptLengthSlider": {
+    "message": "Controle deslizante de comprimento",
+    "description": "Accessible name of the slider that mirrors the password length field."
+  },
+  "popupOptCharset": {
+    "message": "Conjunto de caracteres",
+    "description": "Option label: the named set of characters a password is drawn from."
+  },
+  "popupOptRequired": {
+    "message": "Deve incluir",
+    "description": "Group label for the character classes a password must contain."
+  },
+  "popupClassLower": {
+    "message": "Minúsculas",
+    "description": "Character class: lowercase letters."
+  },
+  "popupClassUpper": {
+    "message": "Maiúsculas",
+    "description": "Character class: uppercase letters."
+  },
+  "popupClassDigit": {
+    "message": "Dígitos",
+    "description": "Character class: digits 0 to 9."
+  },
+  "popupClassSymbol": {
+    "message": "Símbolos",
+    "description": "Character class: punctuation and symbols."
+  },
+  "popupOptExclude": {
+    "message": "Excluir caracteres",
+    "description": "Option label: characters that must not appear in the password."
+  },
+  "popupOptAllowWeak": {
+    "message": "Permitir entropia abaixo do mínimo",
+    "description": "Checkbox: let the generator produce a password weaker than its minimum entropy."
+  },
+  "popupOptWords": {
+    "message": "Palavras",
+    "description": "Option label: number of words in the passphrase."
+  },
+  "popupOptSeparator": {
+    "message": "Separador",
+    "description": "Option label: text between passphrase words, or between an API key's prefix and its random part."
+  },
+  "popupOptCapitalize": {
+    "message": "Iniciais maiúsculas",
+    "description": "Checkbox: start each passphrase word with a capital letter."
+  },
+  "popupOptDigitSuffix": {
+    "message": "Acrescentar um dígito",
+    "description": "Checkbox: add one random digit to the end of the passphrase."
+  },
+  "popupOptBytes": {
+    "message": "Bytes",
+    "description": "Option label: number of random bytes in the secret."
+  },
+  "popupOptEncoding": {
+    "message": "Codificação",
+    "description": "Option label: text encoding of the secret (base64url, hex and so on)."
+  },
+  "popupOptPrefix": {
+    "message": "Prefixo",
+    "description": "Option label: fixed text placed before a secret or an API key."
+  },
+  "popupOptKeyLength": {
+    "message": "Caracteres aleatórios",
+    "description": "Option label: number of random characters after the API key's prefix and separator."
+  },
+  "popupOptDigits": {
+    "message": "Dígitos",
+    "description": "Option label: number of digits in the PIN."
+  },
+  "popupCheckLabel": {
+    "message": "Senha a verificar",
+    "description": "Label of the password input on the Check tab."
+  },
+  "popupCheckShow": {
+    "message": "Mostrar",
+    "description": "Button: reveal the password typed on the Check tab."
+  },
+  "popupCheckHide": {
+    "message": "Ocultar",
+    "description": "Button: mask the password typed on the Check tab again."
+  },
+  "popupCheckHint": {
+    "message": "Digite ou cole uma senha para estimar a entropia dela. Ela fica só neste popup e nunca é salva.",
+    "description": "Shown on the Check tab while the input is empty."
+  },
+  "popupCheckClasses": {
+    "message": "Classes de caracteres: $LIST$",
+    "description": "Character classes found in the checked password. LIST is comma-separated, for example 'Lowercase, Digits'.",
+    "placeholders": { "list": { "content": "$1", "example": "Lowercase, Digits" } }
+  },
+  "popupCheckCaveat": {
+    "message": "Este é um limite superior: supõe que cada caractere foi escolhido ao acaso. Palavras, nomes e datas são muito mais fracos.",
+    "description": "Caveat under the entropy estimate on the Check tab."
+  },
+  "popupShortcutLabel": {
+    "message": "Atalho para preencher:",
+    "description": "Footer label before the keyboard shortcut that generates a password and fills the focused password field."
+  },
+  "popupShortcutUnset": {
+    "message": "não definido",
+    "description": "Shown after popupShortcutLabel when no keyboard shortcut is assigned."
+  },
+  "popupShortcutHintChrome": {
+    "message": "Defina em chrome://extensions/shortcuts.",
+    "description": "Chrome and Edge: where to assign the shortcut. Keep the address unchanged."
+  },
+  "popupShortcutHintFirefox": {
+    "message": "Defina em about:addons: menu da engrenagem, Gerenciar atalhos de extensões.",
+    "description": "Firefox: where to assign the shortcut. Keep the address unchanged and use Firefox's own name for the menu item."
+  },
+  "popupVersionLabel": {
+    "message": "Versão",
+    "description": "Footer label before the extension version number."
+  },
+  "popupPrivacyNote": {
+    "message": "Funciona localmente. Sem acesso à rede. Copiar deixa o valor na área de transferência.",
+    "description": "Footer note."
   }
 }

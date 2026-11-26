@@ -6,6 +6,11 @@ import { type Kind, type Settings, bindingOptions, sanitize } from "./settings.j
 export type Generated = {
   value: string;
   entropyBits: number;
+  /**
+   * The core's own count, whose unit depends on the kind: words for a
+   * passphrase, and for an API key the random characters without prefix
+   * and separator. Do not show it as the number of characters in `value`.
+   */
   length: number;
   charsetId: string;
   /** Advisory messages from the core (weak PIN entropy, compatibility flags). */
