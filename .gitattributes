@@ -12,3 +12,12 @@ internal/words/eff_large_wordlist.txt -text
 *.yaml text eol=lf
 *.yml text eol=lf
 *.json text eol=lf
+
+# Keep the extension's sources LF on every OS. It is built without a
+# bundler or minifier, so line endings in shipped files reach the packages,
+# and a CRLF checkout on Windows would build zips with different checksums.
+extension/**/*.ts text eol=lf
+extension/**/*.mjs text eol=lf
+extension/**/*.html text eol=lf
+extension/**/*.css text eol=lf
+extension/**/*.svg text eol=lf

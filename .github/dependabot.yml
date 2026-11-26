@@ -53,3 +53,14 @@ updates:
       prefix-development: chore
       include: scope
     open-pull-requests-limit: 10
+
+  - package-ecosystem: npm
+    directory: /extension
+    schedule:
+      interval: weekly
+    commit-message:
+      # Only devDependencies, so every bump is a chore and cuts no release.
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    open-pull-requests-limit: 10

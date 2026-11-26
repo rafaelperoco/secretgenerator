@@ -421,3 +421,91 @@ jobs:
             exit 0
           fi
           cargo publish --allow-dirty
+
+  # Builds the browser extension packages (Chrome/Edge and Firefox) from the
+  # tagged tree and attaches them to the GitHub release that the `release`
+  # job published. Nothing depends on this job and it takes no artifact
+  # from another one, so a failure here leaves the binaries, the images,
+  # the provenance and the registry publishes as they are.
+  #
+  # These zips are NOT covered by the cosign-signed checksums.txt and are
+  # not subjects of the SLSA provenance: both are computed in the `release`
+  # job from goreleaser's artifacts, before this job starts. Their hashes
+  # are in extension-SHA256SUMS, which is not signed either. Nothing is
+  # sent to the Chrome Web Store, Edge Add-ons or addons.mozilla.org.
+  extension-packages:
+    name: extension packages
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: go.sum
+
+      - name: Install TinyGo
+        env:
+          TINYGO_VERSION: "0.41.1"
+        run: |
+          set -euo pipefail
+          curl -sSL "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo${TINYGO_VERSION}.linux-amd64.tar.gz" \
+            -o /tmp/tinygo.tgz
+          sudo tar -xzf /tmp/tinygo.tgz -C /usr/local/
+          echo "/usr/local/tinygo/bin" >> "$GITHUB_PATH"
+
+      # Node 22 as in extension-ci.yml, not the 24 of the npm publish jobs:
+      # the zips are compressed by Node's bundled zlib, so the packages are
+      # reproducible for a Node version, and CI is where they are tested.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install extension deps
+        run: npm ci
+
+      # The tag names the release, so it overrides the version in
+      # extension/package.json. On a release-please tag the two are equal,
+      # because the release pull request bumps package.json through
+      # extra-files. A hand-pushed prerelease tag exists only as a tag.
+      #
+      # A final tag that disagrees with package.json was pushed by hand
+      # without the release pull request. The packages are still built, but
+      # a rebuild from the tagged source without --version would carry
+      # another manifest version, which matters to store reviewers who
+      # compare the two. That is worth a warning, not a failed release.
+      - name: Build both targets at the tag version (compiles WASM with TinyGo + TS)
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${REF_NAME#v}"
+          in_tree="$(node -p "require('./package.json').version")"
+          if [[ "$version" != *-* && "$version" != "$in_tree" ]]; then
+            echo "::warning title=extension version::Tag ${REF_NAME} does not match the version in extension/package.json (${in_tree})."
+          fi
+          npm run build -- --compiler tinygo --version "$version"
+
+      - name: Package (deterministic zips + SHA256SUMS)
+        run: npm run package
+
+      - name: Attach the packages to the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # Next to goreleaser's checksums.txt a file called SHA256SUMS
+          # would read as covering the whole release. The asset name says
+          # what it covers; the lines inside still name the two zips.
+          cp artifacts/SHA256SUMS artifacts/extension-SHA256SUMS
+          gh release upload "$REF_NAME" artifacts/*.zip artifacts/extension-SHA256SUMS --clobber

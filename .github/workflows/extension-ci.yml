@@ -1,0 +1,156 @@
+name: extension-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "extension/**"
+      - "web/wasm/**"
+      - "internal/**"
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/extension-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "extension/**"
+      - "web/wasm/**"
+      - "internal/**"
+      - "pkg/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/extension-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: build + test
+    runs-on: ubuntu-latest
+    # The job drives a browser. A hung one must not hold the runner for the
+    # default six hours.
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26.9"
+          cache-dependency-path: go.sum
+
+      - name: Install TinyGo
+        env:
+          TINYGO_VERSION: "0.41.1"
+        run: |
+          set -euo pipefail
+          curl -sSL "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo${TINYGO_VERSION}.linux-amd64.tar.gz" \
+            -o /tmp/tinygo.tgz
+          sudo tar -xzf /tmp/tinygo.tgz -C /usr/local/
+          echo "/usr/local/tinygo/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install extension deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # --compiler tinygo fails when TinyGo is missing. The default would
+      # fall back to standard Go and build a development package instead.
+      - name: Build both targets (compiles WASM with TinyGo + TS)
+        run: npm run build -- --compiler tinygo
+
+      - name: Unit tests (rebuilds first)
+        run: npm test
+
+      - name: Lint the Firefox build (addons-linter, the linter addons.mozilla.org runs)
+        run: npm run lint:firefox
+
+      # Downloads the Chromium build that the pinned playwright package
+      # expects, plus the system libraries it needs.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests (Chrome build in Chromium)
+        run: npm run test:e2e
+
+      # Without --allow-dev-build this refuses anything but a TinyGo build.
+      - name: Package (deterministic zips + SHA256SUMS)
+        run: npm run package
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: extension-packages
+          path: extension/artifacts/
+          if-no-files-found: error
+
+  # Everything above runs in Chromium; the Firefox build is only linted
+  # there. This job loads it in a real Firefox through geckodriver, both of
+  # which are preinstalled on GitHub's ubuntu runners. It builds for itself
+  # and does not need the job above.
+  #
+  # The smoke test could not be executed where it was written: no Firefox
+  # was available there. Until it has been observed green here, a failure
+  # may be a defect of the test rather than of the extension. The step is
+  # therefore informational: continue-on-error keeps the job green and the
+  # step after it turns a failure into a warning annotation. Once the test
+  # has passed, remove continue-on-error and the warning step.
+  firefox-smoke:
+    name: firefox smoke (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26.9"
+          cache-dependency-path: go.sum
+
+      - name: Install TinyGo
+        env:
+          TINYGO_VERSION: "0.41.1"
+        run: |
+          set -euo pipefail
+          curl -sSL "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo${TINYGO_VERSION}.linux-amd64.tar.gz" \
+            -o /tmp/tinygo.tgz
+          sudo tar -xzf /tmp/tinygo.tgz -C /usr/local/
+          echo "/usr/local/tinygo/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install extension deps
+        run: npm ci
+
+      - name: Build the Firefox target (compiles WASM with TinyGo + TS)
+        run: npm run build -- --target firefox --compiler tinygo
+
+      - name: Smoke test in headless Firefox
+        id: smoke
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          firefox --version
+          geckodriver --version
+          node test/firefox/smoke.mjs dist/firefox
+
+      - name: Report a failed smoke test
+        if: steps.smoke.outcome == 'failure'
+        run: echo "::warning title=firefox-smoke::The Firefox smoke test failed. It is informational until it has been observed green. See the log of the step before this one."
