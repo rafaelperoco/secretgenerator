@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Framed</title>
+  </head>
+  <body>
+    <iframe id="frame" title="Embedded form" width="400" height="200"></iframe>
+    <script>
+      // ?src= names the page to embed, so one file serves a frame of the
+      // same origin and a frame of another.
+      document.getElementById("frame").src = new URLSearchParams(location.search).get("src");
+    </script>
+  </body>
+</html>

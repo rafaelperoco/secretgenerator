@@ -369,11 +369,31 @@ npx playwright install chromium
 
 They load `dist/chrome` as it is built, without host permissions, and drive
 the popup page, the popup's Fill button, the context-menu item and the
-shortcut against local fixture pages. Access to a fixture page comes the way
-a user gives it: through the DevTools command that stands for a click on the
-toolbar button, which grants `activeTab` and opens the real popup. Set
-`EXTENSION_DIR` to test another unpacked Chrome build, for example an
-unzipped package.
+shortcut against the fixture pages in `test/e2e/fixtures/`, served from a
+local port. Set `EXTENSION_DIR` to test another unpacked Chrome build, for
+example an unzipped package.
+
+Every run prints how it got access to the fixture pages, as a line that
+starts with `[e2e] page access:`. There are two ways:
+
+- `activeTab`: the way a user gives access. The DevTools command
+  `Extensions.triggerAction` stands for a click on the toolbar button, which
+  grants `activeTab` for the tab and opens the real popup. The command is
+  experimental. If it is refused, the tests try once more with Chromium's
+  `--enable-unsafe-extension-debugging` flag.
+- `host-permissions`: the fallback for a Chromium that does not have the
+  command. The browser loads a temporary copy of the build whose manifest
+  lists the fixture hosts. `dist/chrome` itself is never changed, and
+  `test/e2e/dist.test.mjs` checks that its manifest asks for no hosts. A run
+  in this mode does not show that the extension works with `activeTab` alone.
+
+`E2E_PAGE_ACCESS=activeTab` makes a run fail instead of falling back, and
+`E2E_PAGE_ACCESS=host-permissions` goes straight to the fallback.
+
+`test/e2e/action-popup-headed.test.mjs` needs a browser window, because only
+there the browser sizes the popup to its content. It is skipped without an X
+display. On a machine without a screen, `xvfb-run -a npm run test:e2e` runs
+it together with the rest.
 
 `.github/workflows/extension-ci.yml` runs all of the above on every push to
 `main` and every pull request that touches the extension or the Go core,

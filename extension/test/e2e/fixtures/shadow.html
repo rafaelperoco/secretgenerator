@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Web component</title>
+    <script src="/events.js"></script>
+  </head>
+  <body>
+    <login-box id="box"></login-box>
+    <script>
+      // A form inside an open shadow root, as component libraries build it.
+      customElements.define(
+        "login-box",
+        class extends HTMLElement {
+          constructor() {
+            super();
+            const root = this.attachShadow({ mode: "open" });
+            const form = document.createElement("form");
+            for (const id of ["pw", "pw2"]) {
+              const input = document.createElement("input");
+              input.id = id;
+              input.type = "password";
+              form.append(input);
+            }
+            root.append(form);
+            // "change" is not composed, natively or here, so it is
+            // recorded where a component listens for it: inside the root.
+            window.shadowChanges = [];
+            root.addEventListener("change", (event) => {
+              if (event.isTrusted) return;
+              window.shadowChanges.push({ field: event.target.id, bubbles: event.bubbles });
+            });
+          }
+        },
+      );
+    </script>
+  </body>
+</html>
