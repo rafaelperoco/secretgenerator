@@ -10,14 +10,17 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "build:chrome": "node scripts/build.mjs --target chrome",
-    "build:firefox": "node scripts/build.mjs --target firefox",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test test/*.test.mjs",
-    "package": "node scripts/package.mjs"
+    "lint:firefox": "addons-linter dist/firefox --warnings-as-errors",
+    "test": "npm run build && node --test \"test/unit/*.test.mjs\"",
+    "test:e2e": "node --test --test-concurrency=1 \"test/e2e/*.test.mjs\"",
+    "package": "node scripts/package.mjs",
+    "build-for-amo": "node scripts/build.mjs --target firefox --compiler tinygo && node scripts/package.mjs --target firefox"
   },
   "devDependencies": {
-    "@types/chrome": "^0.1.0",
-    "typescript": "^5.9.3"
+    "@types/chrome": "0.3.8",
+    "addons-linter": "10.16.0",
+    "playwright": "1.63.0",
+    "typescript": "5.9.3"
   }
 }
