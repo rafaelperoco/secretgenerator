@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "newLine": "lf",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "types": ["chrome"],
     "outDir": "build/js",

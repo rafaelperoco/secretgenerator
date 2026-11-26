@@ -1,0 +1,77 @@
+{
+  "extName": {
+    "message": "secretgenerator",
+    "description": "Extension name. Not translated."
+  },
+  "extDescription": {
+    "message": "Gere senhas, frases-senha, chaves de API e segredos localmente com um núcleo CSPRNG auditável. Sem acesso à rede.",
+    "description": "Store and manifest description. At most 132 characters."
+  },
+  "actionTitle": {
+    "message": "secretgenerator",
+    "description": "Toolbar button tooltip."
+  },
+  "menuFillPassword": {
+    "message": "Gerar senha e preencher",
+    "description": "Context menu item on editable fields."
+  },
+  "commandFillPassword": {
+    "message": "Gerar uma senha e preencher o campo de senha em foco",
+    "description": "Keyboard shortcut description in the browser's shortcut settings."
+  },
+  "fillOk": {
+    "message": "Campo preenchido.",
+    "description": "A generated value was written to the focused field."
+  },
+  "fillOkConfirm": {
+    "message": "Campo e campo de confirmação preenchidos.",
+    "description": "A generated password was written to the focused field and to the confirm-password field."
+  },
+  "fillOkShortened": {
+    "message": "Senha de $LENGTH$ caracteres preenchida, o máximo que este campo aceita.",
+    "description": "The password was shortened to the field's maxlength and filled.",
+    "placeholders": { "length": { "content": "$1", "example": "16" } }
+  },
+  "fillModified": {
+    "message": "Preenchido, mas a página alterou o valor. Confira o campo antes de salvar.",
+    "description": "The page reformatted or stripped the value after it was filled."
+  },
+  "fillTooLong": {
+    "message": "Este campo aceita no máximo $MAX$ caracteres. Gere um valor mais curto no popup.",
+    "description": "The generated value is longer than the field's maxlength.",
+    "placeholders": { "max": { "content": "$1", "example": "12" } }
+  },
+  "fillCrossOrigin": {
+    "message": "O campo está em um frame de outro site, que a extensão não alcança. Use Copiar e cole o valor.",
+    "description": "Focus is inside a cross-origin iframe."
+  },
+  "fillBlocked": {
+    "message": "O navegador não permite preencher nesta página ou neste frame. Use Copiar e cole o valor.",
+    "description": "Script injection was refused: browser page, store page, PDF viewer or a cross-origin frame."
+  },
+  "fillNotPassword": {
+    "message": "O atalho só preenche campos de senha. Foque um campo de senha ou clique no campo com o botão direito.",
+    "description": "The keyboard shortcut was used while a non-password field was focused."
+  },
+  "fillReadOnly": {
+    "message": "O campo em foco é somente leitura.",
+    "description": "The focused field is disabled or read-only."
+  },
+  "fillHidden": {
+    "message": "O campo em foco não está visível; nada foi preenchido.",
+    "description": "The focused field is hidden."
+  },
+  "fillNoField": {
+    "message": "Clique primeiro em um campo de texto ou de senha na página.",
+    "description": "No fillable field has focus."
+  },
+  "fillError": {
+    "message": "Não foi possível preencher o campo.",
+    "description": "Unexpected failure while filling."
+  },
+  "fillGenerateFailed": {
+    "message": "Não foi possível gerar uma senha com as configurações atuais: $REASON$",
+    "description": "The generator refused the saved password settings. REASON is the core's English error text.",
+    "placeholders": { "reason": { "content": "$1", "example": "entropy below floor" } }
+  }
+}

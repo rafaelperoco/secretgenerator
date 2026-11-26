@@ -1,0 +1,77 @@
+{
+  "extName": {
+    "message": "secretgenerator",
+    "description": "Extension name. Not translated."
+  },
+  "extDescription": {
+    "message": "Generate passwords, passphrases, API keys and secrets locally with an auditable CSPRNG core. No network access.",
+    "description": "Store and manifest description. At most 132 characters."
+  },
+  "actionTitle": {
+    "message": "secretgenerator",
+    "description": "Toolbar button tooltip."
+  },
+  "menuFillPassword": {
+    "message": "Generate password and fill",
+    "description": "Context menu item on editable fields."
+  },
+  "commandFillPassword": {
+    "message": "Generate a password and fill the focused password field",
+    "description": "Keyboard shortcut description in the browser's shortcut settings."
+  },
+  "fillOk": {
+    "message": "Filled the field.",
+    "description": "A generated value was written to the focused field."
+  },
+  "fillOkConfirm": {
+    "message": "Filled the field and its confirmation field.",
+    "description": "A generated password was written to the focused field and to the confirm-password field."
+  },
+  "fillOkShortened": {
+    "message": "Filled a $LENGTH$-character password, the most this field accepts.",
+    "description": "The password was shortened to the field's maxlength and filled.",
+    "placeholders": { "length": { "content": "$1", "example": "16" } }
+  },
+  "fillModified": {
+    "message": "Filled, but the page changed the value. Check the field before saving.",
+    "description": "The page reformatted or stripped the value after it was filled."
+  },
+  "fillTooLong": {
+    "message": "This field accepts at most $MAX$ characters. Generate a shorter value in the popup.",
+    "description": "The generated value is longer than the field's maxlength.",
+    "placeholders": { "max": { "content": "$1", "example": "12" } }
+  },
+  "fillCrossOrigin": {
+    "message": "The field is inside a frame from another site, which the extension cannot reach. Use Copy and paste instead.",
+    "description": "Focus is inside a cross-origin iframe."
+  },
+  "fillBlocked": {
+    "message": "The browser does not allow filling on this page or inside this frame. Use Copy and paste instead.",
+    "description": "Script injection was refused: browser page, store page, PDF viewer or a cross-origin frame."
+  },
+  "fillNotPassword": {
+    "message": "The shortcut only fills password fields. Focus a password field, or right-click the field instead.",
+    "description": "The keyboard shortcut was used while a non-password field was focused."
+  },
+  "fillReadOnly": {
+    "message": "The focused field is read-only.",
+    "description": "The focused field is disabled or read-only."
+  },
+  "fillHidden": {
+    "message": "The focused field is not visible, so nothing was filled.",
+    "description": "The focused field is hidden."
+  },
+  "fillNoField": {
+    "message": "Click a text or password field on the page first.",
+    "description": "No fillable field has focus."
+  },
+  "fillError": {
+    "message": "Could not fill the field.",
+    "description": "Unexpected failure while filling."
+  },
+  "fillGenerateFailed": {
+    "message": "Could not generate a password with the current settings: $REASON$",
+    "description": "The generator refused the saved password settings. REASON is the core's English error text.",
+    "placeholders": { "reason": { "content": "$1", "example": "entropy below floor" } }
+  }
+}
