@@ -90,6 +90,7 @@ Full flag reference: [docs/SUBCOMMANDS.md](docs/SUBCOMMANDS.md).
 | **GitHub Actions**     | `uses: rafaelperoco/secretgenerator/.github/actions/setup-secretgenerator@v2.0.0` |
 | **Python (PyPI)**      | `pip install secretgenerator-py` (CLI binary installed separately)                |
 | **Rust (crates.io)**   | `cargo add secretgenerator` (CLI binary installed separately)                     |
+| **Browser extension**  | Built from source for now: see [extension/README.md](extension/README.md)         |
 | **Verified manual**    | See [verified install](#verified-install) below.                                  |
 
 ### Verified install
@@ -158,6 +159,19 @@ for _, e := range secretgen.EstimateCrackTime(res.EntropyBits) {
 ```
 
 API stability is documented in `pkg/secretgen/doc.go`.
+
+## Browser extension
+
+[`extension/`](extension/README.md) holds a Manifest V3 extension for Chrome,
+Edge and Firefox. Its popup generates the same kinds of credentials as the
+CLI with the same Go core, compiled to WebAssembly, and a generated password
+can be filled into the focused field from the popup, a context-menu item or
+a keyboard shortcut. It makes no network requests, has no host permissions
+and never stores a generated value.
+
+It is not published in any extension store yet. For now it is built from
+source and loaded as an unpacked extension. The steps, the permissions and
+the known limitations are in [extension/README.md](extension/README.md).
 
 ## Examples in 6 languages
 

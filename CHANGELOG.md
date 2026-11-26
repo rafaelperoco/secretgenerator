@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Browser extension for Chrome, Edge and Firefox in `extension/` (Manifest
+  V3, one codebase, two build targets). The popup generates passwords,
+  passphrases, secrets, API keys and PINs and estimates the entropy of an
+  existing password, with the same Go core compiled to WebAssembly. A
+  generated password can be filled into the focused field from the popup,
+  from a context-menu item or with a keyboard shortcut. The extension
+  requests `activeTab`, `contextMenus`, `scripting` and `storage`, has no
+  host permissions and no content scripts, and its content security policy
+  blocks network requests. Generated values are never written to storage.
+  It is not published in any extension store and is built from source for
+  now. See [extension/README.md](extension/README.md).
+- Extension packages on GitHub releases:
+  `secretgenerator-extension-<version>-chrome.zip`,
+  `secretgenerator-extension-<version>-firefox.zip` and
+  `extension-SHA256SUMS`. They are built with TinyGo at the release tag.
+  They are not covered by the signed `checksums.txt` or by the SLSA
+  provenance.
+
 ## [2.1.0](https://github.com/rafaelperoco/secretgenerator/compare/v2.0.0...v2.1.0) (2026-10-14)
 
 
